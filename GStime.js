@@ -104,6 +104,35 @@ GStime.prototype.html = function(html) {
 };
 
 /**
+ * Gets the value of a computed style property for the first element in the set of matched elements 
+ * or sets one or more CSS properties for every matched element.
+ * @param {string|Object} propertyName - The name of the CSS property to get, or an object of property-value pairs to set.
+ * @param {string} [value] - The value of the CSS property to set. Ignored if propertyName is an object.
+ * @returns {string|GStime} The CSS property value when getting, or the GStime object for chaining when setting.
+ */
+GStime.prototype.css = function(propertyName, value) {
+    if (!this.element) return;
+
+    // If an object was passed, we assume it's {prop: value, prop: value}
+    if (typeof propertyName === "object") {
+        for (let key in propertyName) {
+            if (propertyName.hasOwnProperty(key)) {
+                this.element.style[key] = propertyName[key];
+            }
+        }
+        return this; // for chaining
+    } else {
+        // Handle .css("propertyname") and .css("propertyname", "value")
+        if (typeof value === "undefined") {
+            return window.getComputedStyle(this.element)[propertyName];
+        } else {
+            this.element.style[propertyName] = value;
+            return this; // for chaining
+        }
+    }
+};
+
+/**
  * Performs an AJAX request.
  * @param {string} url - The URL to send the request to.
  * @param {object} [options] - Optional configurations for the request (method, headers, body, etc.).

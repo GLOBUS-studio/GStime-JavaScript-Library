@@ -41,6 +41,7 @@ $(document).ready(function() {
 - `append(html)`: Insert content to the end of each element in the set of matched elements.
 - `prepend(html)`: Insert content to the beginning of each element in the set of matched elements.
 - `html([html])`: Get the HTML contents of the first element in the set of matched elements or set the HTML contents of every matched element.
+- `.css(propertyName, [value])`: Get the value of a computed style property for the first element in the set of matched elements or set one or more CSS properties for every matched element.
 - `ajax(url, [options])`: Performs an AJAX request to the provided URL with optional configurations for the request.
 
 ## Contribution
