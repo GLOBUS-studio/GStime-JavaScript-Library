@@ -202,6 +202,47 @@ GStime.prototype.cloneFull = function() {
     return null; 
 };
 
+/**
+ * Animates an element's specified CSS property over a duration.
+ * 
+ * @param {Object} properties - An object of CSS properties and their target values.
+ * @param {number} duration - The duration over which to animate the properties, in milliseconds.
+ * @param {function} [callback] - An optional callback to be executed after the animation completes.
+ */
+GStime.prototype.animate = function(properties, duration, callback) {
+    if (this.element && properties) {
+        const start = performance.now();
+        const initialStyles = {};
+
+        for (const property in properties) {
+            initialStyles[property] = this.element.style[property] || getComputedStyle(this.element)[property];
+        }
+
+        const animateFrame = (timestamp) => {
+            const progress = timestamp - start;
+            const remaining = Math.max(0, duration - progress);
+
+            for (const property in properties) {
+                const initialValue = parseFloat(initialStyles[property]);
+                const targetValue = parseFloat(properties[property]);
+                const valueChange = targetValue - initialValue;
+
+                // Simple linear tweening formula: newValue = initialValue + progress/duration * valueChange
+                this.element.style[property] = initialValue + Math.min(progress/duration, 1) * valueChange + (Number.isNaN(targetValue) ? '' : 'px');
+            }
+
+            if (remaining) {
+                requestAnimationFrame(animateFrame);
+            } else {
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }
+        };
+
+        requestAnimationFrame(animateFrame);
+    }
+};
 
 /**
  * Performs an AJAX request.
