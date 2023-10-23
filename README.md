@@ -42,6 +42,9 @@ $(document).ready(function() {
 - `prepend(html)`: Insert content to the beginning of each element in the set of matched elements.
 - `html([html])`: Get the HTML contents of the first element in the set of matched elements or set the HTML contents of every matched element.
 - `.css(propertyName, [value])`: Get the value of a computed style property for the first element in the set of matched elements or set one or more CSS properties for every matched element.
+- `.hide()`: Hides the matched elements by setting their display property to 'none'.
+- `.show()`: Displays the matched elements by setting their display property to '' (empty string).
+- `.toggle()`: Toggles the visibility of the matched elements by altering their display property.
 - `ajax(url, [options])`: Performs an AJAX request to the provided URL with optional configurations for the request.
 
 ## Contribution

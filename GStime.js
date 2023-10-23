@@ -133,6 +133,39 @@ GStime.prototype.css = function(propertyName, value) {
 };
 
 /**
+ * Hides the matched elements by setting their display property to 'none'.
+ * @returns {GStime} The GStime object for chaining.
+ */
+GStime.prototype.hide = function() {
+    if (this.element) {
+        this.element.style.display = 'none';
+    }
+    return this; // For chaining purposes
+};
+
+/**
+ * Displays the matched elements by setting their display property to '' (empty string).
+ * @returns {GStime} The GStime object for chaining.
+ */
+GStime.prototype.show = function() {
+    if (this.element) {
+        this.element.style.display = '';
+    }
+    return this; // For chaining purposes
+};
+
+/**
+ * Toggles the visibility of the matched elements by altering their display property.
+ * @returns {GStime} The GStime object for chaining.
+ */
+GStime.prototype.toggle = function() {
+    if (this.element) {
+        this.element.style.display = (this.element.style.display === 'none') ? '' : 'none';
+    }
+    return this; // For chaining purposes
+};
+
+/**
  * Performs an AJAX request.
  * @param {string} url - The URL to send the request to.
  * @param {object} [options] - Optional configurations for the request (method, headers, body, etc.).
