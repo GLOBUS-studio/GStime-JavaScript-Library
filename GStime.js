@@ -245,6 +245,59 @@ GStime.prototype.animate = function(properties, duration, callback) {
 };
 
 /**
+ * Gradually changes the opacity of the selected element to 0, giving a "fade out" effect.
+ *
+ * @param {number} duration - The duration over which to fade out, in milliseconds.
+ * @param {function} [callback] - An optional callback to execute once the animation is complete.
+ */
+GStime.prototype.fadeOut = function(duration, callback) {
+    if (this.element) {
+        const fadeEffect = (timestamp) => {
+            if (!this.element.style.opacity) {
+                this.element.style.opacity = 1;
+            }
+            if (this.element.style.opacity > 0) {
+                this.element.style.opacity -= (timestamp - start) / duration;
+                requestAnimationFrame(fadeEffect);
+            } else {
+                this.element.style.display = 'none';
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }
+        };
+        const start = performance.now();
+        requestAnimationFrame(fadeEffect);
+    }
+};
+
+/**
+ * Gradually changes the opacity of the selected element from 0 to 1, giving a "fade in" effect.
+ *
+ * @param {number} duration - The duration over which to fade in, in milliseconds.
+ * @param {function} [callback] - An optional callback to execute once the animation is complete.
+ */
+GStime.prototype.fadeIn = function(duration, callback) {
+    if (this.element) {
+        this.element.style.display = ''; // Reset the display property
+        this.element.style.opacity = 0;
+
+        const fadeEffect = (timestamp) => {
+            if (this.element.style.opacity < 1) {
+                this.element.style.opacity = Math.min((timestamp - start) / duration, 1);
+                requestAnimationFrame(fadeEffect);
+            } else {
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }
+        };
+        const start = performance.now();
+        requestAnimationFrame(fadeEffect);
+    }
+};
+
+/**
  * Performs an AJAX request.
  * @param {string} url - The URL to send the request to.
  * @param {object} [options] - Optional configurations for the request (method, headers, body, etc.).

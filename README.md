@@ -48,6 +48,8 @@ $(document).ready(function() {
 - `clone()`: Creates a shallow copy of the set of matched elements.
 - `cloneFull()`: Creates a deep copy of the set of matched elements, including all data and event handlers.
 - `animate(properties, duration, [callback])`: Animates an element's specified CSS property over a given duration.
+- `fadeOut(duration, [callback])`: Gradually decreases the opacity of the element, giving a "fade out" effect.
+- `fadeIn(duration, [callback])`: Gradually increases the opacity of the element, giving a "fade in" effect.
 - `ajax(url, [options])`: Performs an AJAX request to the provided URL with optional configurations for the request.
 
 ## Contribution
