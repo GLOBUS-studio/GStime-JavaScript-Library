@@ -54,6 +54,12 @@ $(document).ready(function() {
 - `addClass(className)`: Adds the specified class to the selected element.
 - `removeClass(className)`: Removes the specified class from the selected element.
 - `toggleClass(className)`: Toggles the specified class on the selected element.
+- `attr(attr, value)`: Get the value of an attribute for the first element or set one or more attributes for every matched element.
+- `removeAttr(attr)`: Remove an attribute from each element in the set of matched elements.
+- `width(value)`: Get the current computed width of the first element or set the width of every matched element.
+- `height(value)`: Get the current computed height of the first element or set the height of every matched element.
+- `offset()`: Get the current coordinates of the first element in the set of matched elements, relative to the document.
+- `position()`: Get the current coordinates of the first element in the set of matched elements, relative to the offset parent.
 - `ajax(url, [options])`: Performs an AJAX request to the provided URL with optional configurations for the request.
 
 ## Contribution

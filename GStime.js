@@ -350,6 +350,102 @@ GStime.prototype.toggleClass = function(className) {
 };
 
 /**
+ * Gets the value of an attribute for the first element in the set of matched elements or sets one or more attributes for every matched element.
+ *
+ * @param {string} attr - The name of the attribute to get or set.
+ * @param {string} [value] - The value to set for the attribute.
+ * @returns {string|GStime} The attribute's value when getting, or the current GStime object for chaining when setting.
+ */
+GStime.prototype.attr = function(attr, value) {
+    if (!this.element) return null;
+
+    if (typeof value !== 'undefined') {
+        this.element.setAttribute(attr, value);
+        return this; // For chaining purposes
+    } else {
+        return this.element.getAttribute(attr);
+    }
+};
+
+/**
+ * Removes an attribute from each element in the set of matched elements.
+ *
+ * @param {string} attr - The name of the attribute to remove.
+ * @returns {GStime} The current GStime object for chaining.
+ */
+GStime.prototype.removeAttr = function(attr) {
+    if (this.element) {
+        this.element.removeAttribute(attr);
+    }
+    return this; // For chaining purposes
+};
+
+/**
+ * Gets the current computed width of the first element in the set of matched elements or sets the width of every matched element.
+ *
+ * @param {number|string} [value] - The new width to set for the element.
+ * @returns {number|GStime} The width in pixels when getting, or the current GStime object for chaining when setting.
+ */
+GStime.prototype.width = function(value) {
+    if (!this.element) return null;
+
+    if (typeof value !== 'undefined') {
+        this.element.style.width = typeof value === 'string' ? value : `${value}px`;
+        return this; // For chaining purposes
+    } else {
+        return this.element.getBoundingClientRect().width;
+    }
+};
+
+/**
+ * Gets the current computed height of the first element in the set of matched elements or sets the height of every matched element.
+ *
+ * @param {number|string} [value] - The new height to set for the element.
+ * @returns {number|GStime} The height in pixels when getting, or the current GStime object for chaining when setting.
+ */
+GStime.prototype.height = function(value) {
+    if (!this.element) return null;
+
+    if (typeof value !== 'undefined') {
+        this.element.style.height = typeof value === 'string' ? value : `${value}px`;
+        return this; // For chaining purposes
+    } else {
+        return this.element.getBoundingClientRect().height;
+    }
+};
+
+/**
+ * Gets the current coordinates of the first element in the set of matched elements, relative to the document.
+ *
+ * @returns {Object} An object containing the properties top, left, width, and height.
+ */
+GStime.prototype.offset = function() {
+    if (!this.element) return null;
+
+    const rect = this.element.getBoundingClientRect();
+    return {
+        top: rect.top + window.pageYOffset,
+        left: rect.left + window.pageXOffset,
+        width: rect.width,
+        height: rect.height
+    };
+};
+
+/**
+ * Gets the current coordinates of the first element in the set of matched elements, relative to the offset parent.
+ *
+ * @returns {Object} An object containing the properties top and left.
+ */
+GStime.prototype.position = function() {
+    if (!this.element) return null;
+
+    return {
+        top: this.element.offsetTop,
+        left: this.element.offsetLeft
+    };
+};
+
+/**
  * Performs an AJAX request.
  * @param {string} url - The URL to send the request to.
  * @param {object} [options] - Optional configurations for the request (method, headers, body, etc.).
