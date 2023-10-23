@@ -104,6 +104,37 @@ GStime.prototype.html = function(html) {
 };
 
 /**
+ * Performs an AJAX request.
+ * @param {string} url - The URL to send the request to.
+ * @param {object} [options] - Optional configurations for the request (method, headers, body, etc.).
+ * @returns {Promise<any>} A promise with the result of the AJAX request.
+ */
+GStime.prototype.ajax = function(url, options = {}) {
+    // Setting default method to GET if not provided
+    options.method = options.method || 'GET';
+
+    // Setting headers to application/json if not provided
+    options.headers = options.headers || { 'Content-Type': 'application/json' };
+
+    // If a body is provided and the Content-Type is JSON, stringify the body
+    if (options.body && options.headers['Content-Type'] === 'application/json') {
+        options.body = JSON.stringify(options.body);
+    }
+
+    return fetch(url, options)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network response was not ok: ${response.status}`);
+            }
+            return response.json(); // we're assuming server always returns JSON
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+            throw error;
+        });
+};
+
+/**
  * Factory function for the GStime library. It creates a new GStime instance and calls its init method.
  * @param {string} selector - The selector to use in the GStime instance.
  * @returns {GStime} A new GStime instance.
