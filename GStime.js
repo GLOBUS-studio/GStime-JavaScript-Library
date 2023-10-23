@@ -298,6 +298,58 @@ GStime.prototype.fadeIn = function(duration, callback) {
 };
 
 /**
+ * Checks if the selected element has the specified class.
+ *
+ * @param {string} className - The class name to check.
+ * @returns {boolean} Returns true if the element has the class, else false.
+ */
+GStime.prototype.hasClass = function(className) {
+    if (this.element) {
+        return this.element.classList.contains(className);
+    }
+    return false;
+};
+
+/**
+ * Adds the specified class to the selected element.
+ *
+ * @param {string} className - The class name to add.
+ * @returns {GStime} The current GStime object for chaining.
+ */
+GStime.prototype.addClass = function(className) {
+    if (this.element) {
+        this.element.classList.add(className);
+    }
+    return this; // For chaining purposes
+};
+
+/**
+ * Removes the specified class from the selected element.
+ *
+ * @param {string} className - The class name to remove.
+ * @returns {GStime} The current GStime object for chaining.
+ */
+GStime.prototype.removeClass = function(className) {
+    if (this.element) {
+        this.element.classList.remove(className);
+    }
+    return this; // For chaining purposes
+};
+
+/**
+ * Toggles the specified class on the selected element.
+ *
+ * @param {string} className - The class name to toggle.
+ * @returns {GStime} The current GStime object for chaining.
+ */
+GStime.prototype.toggleClass = function(className) {
+    if (this.element) {
+        this.element.classList.toggle(className);
+    }
+    return this; // For chaining purposes
+};
+
+/**
  * Performs an AJAX request.
  * @param {string} url - The URL to send the request to.
  * @param {object} [options] - Optional configurations for the request (method, headers, body, etc.).

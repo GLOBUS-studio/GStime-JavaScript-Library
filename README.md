@@ -50,6 +50,10 @@ $(document).ready(function() {
 - `animate(properties, duration, [callback])`: Animates an element's specified CSS property over a given duration.
 - `fadeOut(duration, [callback])`: Gradually decreases the opacity of the element, giving a "fade out" effect.
 - `fadeIn(duration, [callback])`: Gradually increases the opacity of the element, giving a "fade in" effect.
+- `hasClass(className)`: Checks if the selected element has the specified class.
+- `addClass(className)`: Adds the specified class to the selected element.
+- `removeClass(className)`: Removes the specified class from the selected element.
+- `toggleClass(className)`: Toggles the specified class on the selected element.
 - `ajax(url, [options])`: Performs an AJAX request to the provided URL with optional configurations for the request.
 
 ## Contribution
