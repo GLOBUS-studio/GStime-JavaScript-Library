@@ -447,34 +447,76 @@ GStime.prototype.position = function() {
 
 /**
  * Performs an AJAX request.
- * @param {string} url - The URL to send the request to.
- * @param {object} [options] - Optional configurations for the request (method, headers, body, etc.).
+ * @param {object} settings - Configurations for the request.
  * @returns {Promise<any>} A promise with the result of the AJAX request.
  */
-GStime.prototype.ajax = function(url, options = {}) {
-    // Setting default method to GET if not provided
-    options.method = options.method || 'GET';
-
-    // Setting headers to application/json if not provided
-    options.headers = options.headers || { 'Content-Type': 'application/json' };
-
-    // If a body is provided and the Content-Type is JSON, stringify the body
-    if (options.body && options.headers['Content-Type'] === 'application/json') {
-        options.body = JSON.stringify(options.body);
+GStime.prototype.ajax = function(settings) {
+    // Validate settings
+    if (!settings || typeof settings.url === 'undefined') {
+        throw new Error('A URL is required for the ajax request');
     }
 
-    return fetch(url, options)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Network response was not ok: ${response.status}`);
-            }
-            return response.json(); // we're assuming server always returns JSON
-        })
-        .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
-            throw error;
-        });
+    // Default options
+    const options = {
+        method: 'GET', // default to GET
+        headers: {},
+        ...settings, // merge with user-provided settings
+    };
+
+    // Handle different types of data
+    if (options.data) {
+        if (options.method.toUpperCase() === 'GET') {
+            // Append data as query parameters for GET requests
+            const urlParams = new URLSearchParams(options.data);
+            options.url += `?${urlParams}`;
+        } else if (typeof options.data === 'object') {
+            // Stringify JSON data for POST, PUT, DELETE, etc. requests
+            if (!options.headers['Content-Type']) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(options.data);
+            } else if (options.headers['Content-Type'].includes('application/x-www-form-urlencoded')) {
+                // Convert object to URL-encoded format
+                const urlParams = new URLSearchParams(options.data);
+                options.body = urlParams.toString();
+            } // other content-types can be added as needed
+        } else {
+            options.body = options.data;
+        }
+        // Remove data field from options
+        delete options.data;
+    }
+
+    // Create a promise to handle the request
+    return new Promise((resolve, reject) => {
+        fetch(options.url, options)
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        // Create a more detailed error message
+                        let errMsg = `Error ${response.status}: ${response.statusText}`;
+                        if (text) errMsg += ` - ${text}`;
+                        throw new Error(errMsg);
+                    });
+                }
+
+                // Check response content type to parse accordingly
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else if (contentType && contentType.indexOf("text") !== -1) {
+                    return response.text();
+                } else {
+                    return response.blob();
+                }
+            })
+            .then(data => resolve(data)) // Resolve the promise with the response data
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+                reject(error); // Reject the promise with the error
+            });
+    });
 };
+
 
 /**
  * Factory function for the GStime library. It creates a new GStime instance and calls its init method.
