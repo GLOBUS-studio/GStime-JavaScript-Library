@@ -45,6 +45,8 @@ $(document).ready(function() {
 - `hide()`: Hides the matched elements by setting their display property to 'none'.
 - `show()`: Displays the matched elements by setting their display property to '' (empty string).
 - `toggle()`: Toggles the visibility of the matched elements by altering their display property.
+- `clone()`: Creates a shallow copy of the set of matched elements.
+- `cloneFull()`: Creates a deep copy of the set of matched elements, including all data and event handlers.
 - `ajax(url, [options])`: Performs an AJAX request to the provided URL with optional configurations for the request.
 
 ## Contribution

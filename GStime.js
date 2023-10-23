@@ -166,6 +166,44 @@ GStime.prototype.toggle = function() {
 };
 
 /**
+ * Creates a shallow copy of the set of matched elements.
+ * @returns {GStime} A new GStime object for the cloned element.
+ */
+GStime.prototype.clone = function() {
+    if (this.element) {
+        const clonedElement = this.element.cloneNode(true);
+        const clonedGStime = new GStime();
+        clonedGStime.element = clonedElement;
+        return clonedGStime; // Return the new GStime object
+    }
+    return null; // Return null if there's no element to clone
+};
+
+/**
+ * Creates a deep copy of the set of matched elements, including all data and event handlers.
+ * @returns {GStime} A new GStime object for the cloned element.
+ */
+GStime.prototype.cloneFull = function() {
+    if (this.element) {
+        const clonedElement = this.element.cloneNode(true);
+        const events = this._events; 
+
+        const clonedGStime = new GStime();
+        clonedGStime.element = clonedElement;
+
+        if (events) {
+            for (const event of events) {
+                clonedGStime.on(event.type, event.listener);
+            }
+        }
+
+        return clonedGStime;
+    }
+    return null; 
+};
+
+
+/**
  * Performs an AJAX request.
  * @param {string} url - The URL to send the request to.
  * @param {object} [options] - Optional configurations for the request (method, headers, body, etc.).
