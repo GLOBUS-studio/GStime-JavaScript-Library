@@ -45,8 +45,6 @@ Include GStime in your project:
 - `append(content)`: Append content to elements.
 - `prepend(content)`: Prepend content to elements.
 
-### CSS and Styling
-
 ### CSS Properties
 
 - `css(property, [value])`: Get/set CSS properties.
