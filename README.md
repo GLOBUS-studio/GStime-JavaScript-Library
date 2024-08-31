@@ -12,6 +12,22 @@ GStime is a lightweight, feature-rich, and easy-to-use JavaScript library design
 - **Easy to use**: Straightforward for those familiar with jQuery or vanilla JavaScript.
 - **Chainable Methods**: Perform multiple methods on the same line of code with returned `this` for most methods.
 - **Server-side compatibility**: Checks for the existence of `document` to support usage in server-side environments.
+- **Multiple Element Support**: Most methods operate on and return collections of elements, not just single elements.
+
+## Chainable Methods
+
+Many methods in GStime return the GStime object, allowing for method chaining. This includes methods like `addClass()`, `removeClass()`, `append()`, `prepend()`, `hide()`, `show()`, and more. For example:
+
+```javascript
+$('.element')
+  .addClass('new-class')
+  .css('color', 'red')
+  .show()
+  .append('<p>New content</p>');
+  ```
+
+## Multiple Element Support
+GStime supports operating on multiple elements at once. When you select elements using $(), it returns a GStime object containing all matched elements. Methods like each(), addClass(), removeClass(), etc., operate on all selected elements.
 
 ## How to Use
 
@@ -20,21 +36,30 @@ Include GStime in your project:
 ```html
 <script src="path-to-GStime.js"></script>
 <script>
-    // DOM Ready
-    GStime.ready(function() {
-        // Click event
-        $('.element').on('click', function() {
-            console.log('Element clicked!');
-        });
-
-        // Changing value
-        $('.input').val('New Value');
-        
-        // Adding HTML content
-        $('.container').append('<p>New paragraph</p>');
+  // DOM Ready
+  GStime.ready(function () {
+    // Click event
+    $(".element").on("click", function () {
+      console.log("Element clicked!");
     });
+
+    // Changing value
+    $(".input").val("New Value");
+
+    // Adding HTML content
+    $(".container").append("<p>New paragraph</p>");
+  });
+
+  GStime.ajax({
+    url: "https://api.example.com/data",
+    method: "GET",
+    success: function (response) {
+      console.log("Data received:", response);
+    },
+  });
 </script>
 ```
+
 ## Methods Available
 
 ### Element Selection and Manipulation
@@ -44,6 +69,17 @@ Include GStime in your project:
 - `html([content])`: Get/set the HTML content of elements.
 - `append(content)`: Append content to elements.
 - `prepend(content)`: Prepend content to elements.
+- `after(content)`: Insert content after each element.
+- `before(content)`: Insert content before each element.
+- `remove()`: Remove the set of matched elements from the DOM.
+
+### DOM Traversing
+
+- `parent()`: Gets the parent of each element.
+- `children()`: Gets the children of each element.
+- `siblings()`: Gets the siblings of each element.
+- `find(selector)`: Finds descendants of each element.
+- `closest(selector)`: Gets the first ancestor that matches the selector.
 
 ### CSS Properties
 
@@ -89,6 +125,8 @@ Include GStime in your project:
 
 - `clone()`: Create a shallow copy of elements.
 - `each(callback)`: Iterate over elements.
+- `each(obj, callback)`: Iterate over an array or object.
+- `map(obj, callback)`: Translate all items in an array or object.
 
 ### Static Methods
 
@@ -102,3 +140,15 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 ### License
 
 This project is MIT licensed.
+
+## Browser and Environment Support
+GStime is designed to work in modern browsers that support ES6 features. It should work in:
+
+Chrome 51+
+Firefox 54+
+Safari 10+
+Edge 15+
+Opera 38+
+For server-side environments, GStime is compatible with Node.js 6.4.0 and later versions.
+
+Note: Some features may require additional polyfills for older browsers. For the best experience and widest compatibility, consider using GStime with a modern browser or environment.
