@@ -144,11 +144,13 @@ This project is MIT licensed.
 ## Browser and Environment Support
 GStime is designed to work in modern browsers that support ES6 features. It should work in:
 
-Chrome 51+
-Firefox 54+
-Safari 10+
-Edge 15+
-Opera 38+
+- Chrome 51+
+- Firefox 54+
+- Safari 10+
+- Edge 15+
+- Opera 38+
+
 For server-side environments, GStime is compatible with Node.js 6.4.0 and later versions.
 
-Note: Some features may require additional polyfills for older browsers. For the best experience and widest compatibility, consider using GStime with a modern browser or environment.
+### Note: 
+Some features may require additional polyfills for older browsers. For the best experience and widest compatibility, consider using GStime with a modern browser or environment.
