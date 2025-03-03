@@ -17,10 +17,11 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '16'
-        cache: 'npm'
+        # Удаляем опцию cache, которая вызывает ошибку
+        # cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm install
 
     - name: Minify GStime.js
       run: npm run build
