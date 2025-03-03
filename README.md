@@ -1,26 +1,26 @@
 # GStime JavaScript Library
 
-## Философия библиотеки
+## Library Philosophy
 
-GStime.js — это легковесная JavaScript библиотека для манипуляции с DOM, создания анимации и выполнения AJAX запросов. Она разработана как современный облегченный аналог jQuery, сохраняющий знакомый синтаксис и популярные функции, но оптимизированный для современных браузеров.
+GStime.js is a lightweight JavaScript library for DOM manipulation, animation creation, and AJAX requests. It is designed as a modern lightweight alternative to jQuery, maintaining familiar syntax and popular functions, but optimized for modern browsers.
 
-### Основные принципы:
+### Core Principles:
 
-- **Минимальный размер**: Только необходимый функционал, без излишних возможностей
-- **Современный JavaScript**: Использование современного синтаксиса и API браузеров
-- **Совместимость API**: Синтаксис похож на jQuery для облегчения миграции
-- **Цепочки методов**: Поддержка цепных вызовов методов для лаконичного кода
+- **Minimal Size**: Only necessary functionality, without excessive features
+- **Modern JavaScript**: Using modern syntax and browser APIs
+- **API Compatibility**: Syntax similar to jQuery for easier migration
+- **Method Chaining**: Support for method chaining for concise code
 
-## Быстрый старт
+## Quick Start
 
 ```html
-<!-- Подключение библиотеки -->
+<!-- Include the library -->
 <script src="GStime.js"></script>
 
 <script>
-  // DOM готов
+  // DOM ready
   $(document).ready(function() {
-    // Выбор элементов и манипуляция с ними
+    // Select elements and manipulate them
     $('button').on('click', function() {
       $('.box').fadeIn(500);
     });
@@ -28,106 +28,106 @@ GStime.js — это легковесная JavaScript библиотека дл
 </script>
 ```
 
-## Основные возможности
+## Main Features
 
-### Селекторы
+### Selectors
 
-Выбор элементов на странице по CSS-селекторам:
+Select elements on the page using CSS selectors:
 
 ```javascript
-// Выбор по ID
+// Select by ID
 $("#myElement");
 
-// Выбор по классу
+// Select by class
 $(".myClass");
 
-// Выбор по тегу
+// Select by tag
 $("div");
 
-// Комбинированные селекторы
+// Combined selectors
 $("ul.menu li");
 ```
 
-### Работа с DOM
+### DOM Manipulation
 
-Манипуляция с DOM-элементами:
+Manipulate DOM elements:
 
 ```javascript
-// Изменение HTML содержимого
-$("#content").html("<h1>Новый заголовок</h1>");
+// Change HTML content
+$("#content").html("<h1>New heading</h1>");
 
-// Добавление содержимого
-$(".container").append("<p>Новый параграф</p>");
+// Add content
+$(".container").append("<p>New paragraph</p>");
 
-// Создание элементов
+// Create elements
 $("<div class='box'></div>").appendTo(".container");
 
-// Работа с классами
+// Work with classes
 $(".item").addClass("active");
 $(".item").removeClass("hidden");
 $(".item").toggleClass("selected");
 
-// Работа с атрибутами
+// Work with attributes
 $("img").attr("src", "new-image.jpg");
-$("input").val("Новое значение");
+$("input").val("New value");
 ```
 
-### События
+### Events
 
-Обработка событий:
+Handle events:
 
 ```javascript
-// Базовые события
+// Basic events
 $("#button").on("click", function() {
-  console.log("Кнопка нажата");
+  console.log("Button clicked");
 });
 
-// Делегирование событий
+// Event delegation
 $(".container").on("click", ".button", function() {
-  console.log("Нажата кнопка внутри контейнера");
+  console.log("Button inside container clicked");
 });
 
-// Удаление обработчиков
+// Remove event handlers
 $("#element").off("click");
 ```
 
-### Анимации
+### Animations
 
-Создание анимаций:
+Create animations:
 
 ```javascript
-// Простые анимации
+// Simple animations
 $(".box").fadeIn(500);
 $(".box").fadeOut(500);
 
-// Слайдеры
+// Slide effects
 $(".panel").slideDown(500);
 $(".panel").slideUp(500);
 $(".panel").slideToggle(500);
 
-// Пользовательские анимации
+// Custom animations
 $(".element").animate({ width: "200px", height: "300px" }, 500);
 
-// Анимация цвета
+// Color animations
 $(".button").colorAnimate({ backgroundColor: "#ff0000" }, 500);
 ```
 
 ### AJAX
 
-Выполнение асинхронных запросов:
+Perform asynchronous requests:
 
 ```javascript
-// GET запрос
+// GET request
 GStime.get("api/users", { page: 1 })
   .then(data => console.log(data))
   .catch(error => console.error(error));
 
-// POST запрос
+// POST request
 GStime.post("api/users", { name: "John", age: 30 })
   .then(response => console.log(response))
   .catch(error => console.error(error));
 
-// Расширенные настройки
+// Advanced settings
 GStime.ajax({
   url: "api/data",
   method: "POST",
@@ -143,188 +143,188 @@ GStime.ajax({
 .finally(() => $(".loader").hide());
 ```
 
-## API Документация
+## API Documentation
 
-### Основные методы
+### Core Methods
 
-#### Селектор `$(selector)`
+#### Selector `$(selector)`
 
-Создает новый объект GStime с элементами, соответствующими селектору.
+Creates a new GStime object with elements matching the selector.
 
-**Параметры:**
-- `selector` (String|Element|NodeList|Array): CSS-селектор, HTML-строка или DOM-элемент.
+**Parameters:**
+- `selector` (String|Element|NodeList|Array): CSS selector, HTML string, or DOM element.
 
-**Ограничения:**
-- При передаче HTML-строки создается только один элемент верхнего уровня.
+**Limitations:**
+- When passing an HTML string, only one top-level element is created.
 
 #### `.each(callback)`
 
-Выполняет функцию для каждого элемента в наборе.
+Executes a function for each element in the set.
 
-**Параметры:**
-- `callback` (Function): Функция, выполняемая для каждого элемента.
+**Parameters:**
+- `callback` (Function): Function to execute for each element.
 
 #### `.on(event, [selector], callback)`
 
-Присоединяет обработчик события к элементам.
+Attaches an event handler to elements.
 
-**Параметры:**
-- `event` (String): Название события (например, "click").
-- `selector` (String, необязательный): Селектор для делегирования событий.
-- `callback` (Function): Функция-обработчик.
+**Parameters:**
+- `event` (String): Name of the event (e.g., "click").
+- `selector` (String, optional): Selector for event delegation.
+- `callback` (Function): Event handler function.
 
-**Ограничения:**
-- Делегирование работает только для элементов, существующих на момент привязки события.
+**Limitations:**
+- Delegation only works for elements that exist at the time the event is bound.
 
 #### `.off(event, callback)`
 
-Удаляет обработчик события с элементов.
+Removes an event handler from elements.
 
-**Параметры:**
-- `event` (String): Название события.
-- `callback` (Function): Функция, которую нужно удалить.
+**Parameters:**
+- `event` (String): Name of the event.
+- `callback` (Function): Function to remove.
 
-**Ограничения:**
-- При использовании делегированных событий необходимо передать точно ту же функцию, которая была назначена через `.on()`.
+**Limitations:**
+- When using delegated events, you must pass exactly the same function that was assigned via `.on()`.
 
 #### `.val([newVal])`
 
-Получает или устанавливает значение элементов формы.
+Gets or sets the value of form elements.
 
-**Параметры:**
-- `newVal` (String, необязательный): Новое значение.
+**Parameters:**
+- `newVal` (String, optional): New value.
 
-**Возвращает:**
-- Без параметров: значение первого элемента.
-- С параметром: объект GStime для цепочки вызовов.
+**Returns:**
+- Without parameters: value of the first element.
+- With parameter: GStime object for chaining.
 
 #### `.html([content])`
 
-Получает или устанавливает HTML содержимое элементов.
+Gets or sets the HTML content of elements.
 
-**Параметры:**
-- `content` (String, необязательный): HTML содержимое.
+**Parameters:**
+- `content` (String, optional): HTML content.
 
-**Возвращает:**
-- Без параметров: содержимое первого элемента.
-- С параметром: объект GStime для цепочки вызовов.
+**Returns:**
+- Without parameters: content of the first element.
+- With parameter: GStime object for chaining.
 
-#### `.css(prop, [value])` или `.css(properties)`
+#### `.css(prop, [value])` or `.css(properties)`
 
-Получает или устанавливает CSS свойства элементов.
+Gets or sets CSS properties of elements.
 
-**Параметры:**
-- `prop` (String): Название CSS свойства.
-- `value` (String|Number, необязательный): Значение CSS свойства.
-- `properties` (Object): Объект с CSS свойствами.
+**Parameters:**
+- `prop` (String): Name of the CSS property.
+- `value` (String|Number, optional): Value of the CSS property.
+- `properties` (Object): Object with CSS properties.
 
-**Возвращает:**
-- При получении: значение свойства.
-- При установке: объект GStime для цепочки вызовов.
+**Returns:**
+- When getting: property value.
+- When setting: GStime object for chaining.
 
-### Анимации
+### Animations
 
 #### `.animate(properties, duration, [callback])`
 
-Анимирует CSS свойства элементов.
+Animates CSS properties of elements.
 
-**Параметры:**
-- `properties` (Object): Объект с CSS свойствами и их конечными значениями.
-- `duration` (Number): Длительность анимации в миллисекундах.
-- `callback` (Function, необязательный): Функция, вызываемая по завершении.
+**Parameters:**
+- `properties` (Object): Object with CSS properties and their target values.
+- `duration` (Number): Duration of the animation in milliseconds.
+- `callback` (Function, optional): Function to call once the animation is complete.
 
-**Ограничения:**
-- Анимировать можно только числовые значения CSS свойств.
+**Limitations:**
+- Only numeric CSS property values can be animated.
 
 #### `.fadeIn(duration, [callback])` / `.fadeOut(duration, [callback])`
 
-Показывает или скрывает элементы с эффектом плавного изменения прозрачности.
+Shows or hides elements with a fading effect.
 
-**Параметры:**
-- `duration` (Number): Длительность анимации в миллисекундах.
-- `callback` (Function, необязательный): Функция, вызываемая по завершении.
+**Parameters:**
+- `duration` (Number): Duration of the animation in milliseconds.
+- `callback` (Function, optional): Function to call once the animation is complete.
 
 #### `.slideUp(duration, [callback])` / `.slideDown(duration, [callback])` / `.slideToggle(duration, [callback])`
 
-Скрывает, показывает или переключает видимость элементов с эффектом сворачивания/разворачивания.
+Hides, shows, or toggles the visibility of elements with a sliding effect.
 
-**Параметры:**
-- `duration` (Number): Длительность анимации в миллисекундах.
-- `callback` (Function, необязательный): Функция, вызываемая по завершении.
+**Parameters:**
+- `duration` (Number): Duration of the animation in milliseconds.
+- `callback` (Function, optional): Function to call once the animation is complete.
 
-**Ограничения:**
-- Может работать некорректно для элементов с padding/margin или сложной внутренней структурой.
+**Limitations:**
+- May not work correctly for elements with padding/margin or complex internal structure.
 
 #### `.colorAnimate(properties, duration, [callback])`
 
-Анимирует цветовые CSS свойства элементов.
+Animates color CSS properties of elements.
 
-**Параметры:**
-- `properties` (Object): Объект с цветовыми CSS свойствами и их конечными значениями.
-- `duration` (Number): Длительность анимации в миллисекундах.
-- `callback` (Function, необязательный): Функция, вызываемая по завершении.
+**Parameters:**
+- `properties` (Object): Object with color CSS properties and their target values.
+- `duration` (Number): Duration of the animation in milliseconds.
+- `callback` (Function, optional): Function to call once the animation is complete.
 
-**Ограничения:**
-- Поддерживаются форматы цветов: hex (#RGB, #RRGGBB, #RRGGBBAA), rgb() и rgba().
+**Limitations:**
+- Supported color formats: hex (#RGB, #RRGGBB, #RRGGBBAA), rgb() and rgba().
 
 ### AJAX
 
 #### `GStime.ajax(settings)`
 
-Выполняет AJAX запрос.
+Performs an AJAX request.
 
-**Параметры:**
-- `settings` (Object): Объект с настройками запроса:
-  - `url` (String): URL для запроса.
-  - `method` (String): HTTP метод (GET, POST, PUT, DELETE).
-  - `data` (Object|String): Данные для отправки.
-  - `headers` (Object): HTTP заголовки.
-  - `timeout` (Number): Таймаут запроса в миллисекундах.
-  - `beforeSend` (Function): Функция, вызываемая перед отправкой запроса.
+**Parameters:**
+- `settings` (Object): Object with request settings:
+  - `url` (String): URL for the request.
+  - `method` (String): HTTP method (GET, POST, PUT, DELETE).
+  - `data` (Object|String): Data to send.
+  - `headers` (Object): HTTP headers.
+  - `timeout` (Number): Request timeout in milliseconds.
+  - `beforeSend` (Function): Function to call before sending the request.
 
-**Возвращает:**
-- Promise, разрешающийся с данными ответа или отклоняющийся с ошибкой.
+**Returns:**
+- Promise that resolves with the response data or rejects with an error.
 
-**Ограничения:**
-- Не поддерживает синхронные запросы.
-- Ограниченная поддержка кросс-доменных запросов (зависит от браузера).
+**Limitations:**
+- Does not support synchronous requests.
+- Limited support for cross-domain requests (depends on the browser).
 
 #### `GStime.get(url, [data], [options])`
 
-Выполняет GET запрос.
+Performs a GET request.
 
-**Параметры:**
-- `url` (String): URL для запроса.
-- `data` (Object, необязательный): Параметры запроса.
-- `options` (Object, необязательный): Дополнительные настройки.
+**Parameters:**
+- `url` (String): URL for the request.
+- `data` (Object, optional): Request parameters.
+- `options` (Object, optional): Additional settings.
 
 #### `GStime.post(url, data, [options])`
 
-Выполняет POST запрос.
+Performs a POST request.
 
-**Параметры:**
-- `url` (String): URL для запроса.
-- `data` (Object): Данные для отправки.
-- `options` (Object, необязательный): Дополнительные настройки.
+**Parameters:**
+- `url` (String): URL for the request.
+- `data` (Object): Data to send.
+- `options` (Object, optional): Additional settings.
 
 #### `GStime.put(url, data, [options])` / `GStime.delete(url, [data], [options])`
 
-Выполняет PUT или DELETE запрос.
+Performs a PUT or DELETE request.
 
-**Параметры:**
-- `url` (String): URL для запроса.
-- `data` (Object): Данные для отправки.
-- `options` (Object, необязательный): Дополнительные настройки.
+**Parameters:**
+- `url` (String): URL for the request.
+- `data` (Object): Data to send.
+- `options` (Object, optional): Additional settings.
 
-## Совместимость с браузерами
+## Browser Compatibility
 
-GStime.js поддерживает следующие браузеры:
+GStime.js supports the following browsers:
 - Chrome 60+
 - Firefox 55+
 - Safari 11+
 - Edge 15+
 - Opera 47+
 
-## Лицензия
+## License
 
-GStime.js распространяется под лицензией MIT.
+GStime.js is distributed under the MIT license.
