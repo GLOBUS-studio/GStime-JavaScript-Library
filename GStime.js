@@ -1,7 +1,13 @@
+/*
+* GStime.js
+* A lightweight library for DOM manipulation.
+* GLOBUS.studio
+* Version: 1.4.0
+*/
+
 (function (global) {
     "use strict";
-  
-    // Проверка на существование document
+
     const isClient = typeof document !== "undefined";
   
     /**
@@ -51,14 +57,41 @@
     };
   
     /**
-     * Attaches an event listener to the elements.
+     * Attaches an event listener to the elements with optional event delegation.
      * @param {string} event - The event type to listen for.
+     * @param {string} [selector] - Optional selector for event delegation. If provided, the event will only fire for elements matching this selector.
      * @param {function} callback - The function to call when the event occurs.
      * @returns {GStime} The GStime object for chaining.
      */
-    GStime.prototype.on = function (event, callback) {
+    GStime.prototype.on = function (event, selector, callback) {
+      // Check if second argument is a function (no selector provided)
+      if (typeof selector === "function") {
+        callback = selector;
+        selector = null;
+        
+        // Use the original event binding without delegation
+        return this.each(function () {
+          this.addEventListener(event, callback, false);
+        });
+      }
+      
+      // Event delegation
       return this.each(function () {
-        this.addEventListener(event, callback, false);
+        this.addEventListener(event, function (e) {
+          const potentialTargets = document.querySelectorAll(selector);
+          let target = e.target;
+          
+          while (target && target !== this) {
+            if (Array.from(potentialTargets).includes(target)) {
+              // Create a new event with original properties
+              const delegatedEvent = Object.create(e);
+              // Add currentTarget property
+              delegatedEvent.currentTarget = target;
+              callback.call(target, delegatedEvent);
+            }
+            target = target.parentNode;
+          }
+        }, false);
       });
     };
   
@@ -367,6 +400,70 @@
     };
   
     /**
+     * Performs a GET AJAX request.
+     * @param {string} url - The URL for the request.
+     * @param {Object} [data] - The data to send with the request.
+     * @param {Object} [options] - Additional options for the request.
+     * @returns {Promise} A promise that resolves with the response data.
+     */
+    GStime.get = function (url, data, options) {
+      return GStime.ajax({
+        url,
+        method: "GET",
+        data,
+        ...options
+      });
+    };
+
+    /**
+     * Performs a POST AJAX request.
+     * @param {string} url - The URL for the request.
+     * @param {Object} data - The data to send with the request.
+     * @param {Object} [options] - Additional options for the request.
+     * @returns {Promise} A promise that resolves with the response data.
+     */
+    GStime.post = function (url, data, options) {
+      return GStime.ajax({
+        url,
+        method: "POST",
+        data,
+        ...options
+      });
+    };
+
+    /**
+     * Performs a PUT AJAX request.
+     * @param {string} url - The URL for the request.
+     * @param {Object} data - The data to send with the request.
+     * @param {Object} [options] - Additional options for the request.
+     * @returns {Promise} A promise that resolves with the response data.
+     */
+    GStime.put = function (url, data, options) {
+      return GStime.ajax({
+        url,
+        method: "PUT",
+        data,
+        ...options
+      });
+    };
+
+    /**
+     * Performs a DELETE AJAX request.
+     * @param {string} url - The URL for the request.
+     * @param {Object} [data] - The data to send with the request.
+     * @param {Object} [options] - Additional options for the request.
+     * @returns {Promise} A promise that resolves with the response data.
+     */
+    GStime.delete = function (url, data, options) {
+      return GStime.ajax({
+        url,
+        method: "DELETE",
+        data,
+        ...options
+      });
+    };
+
+    /**
      * Performs an AJAX request.
      * @param {Object} settings - The settings for the AJAX request.
      * @returns {Promise} A promise that resolves with the response data.
@@ -381,8 +478,15 @@
         const options = {
           method: "GET",
           headers: {},
+          timeout: 0,
           ...settings,
         };
+  
+        // Call beforeSend if provided and abort if it returns false
+        if (options.beforeSend && options.beforeSend() === false) {
+          reject(new Error("Request aborted by beforeSend callback"));
+          return;
+        }
   
         if (options.data) {
           if (options.method.toUpperCase() === "GET") {
@@ -397,6 +501,16 @@
               )
             ) {
               options.body = new URLSearchParams(options.data).toString();
+            } else if (
+              options.headers["Content-Type"].includes("multipart/form-data")
+            ) {
+              const formData = new FormData();
+              for (let key in options.data) {
+                formData.append(key, options.data[key]);
+              }
+              options.body = formData;
+              // Remove the Content-Type header to let browser set it with boundary
+              delete options.headers["Content-Type"];
             }
           } else {
             options.body = options.data;
@@ -404,22 +518,53 @@
           delete options.data;
         }
   
-        fetch(options.url, options)
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.includes("application/json")) {
-              return response.json();
-            } else if (contentType && contentType.includes("text")) {
-              return response.text();
-            } else {
-              return response.blob();
-            }
-          })
-          .then((data) => resolve(data))
-          .catch((error) => reject(error));
+        // Setup timeout if needed
+        let timeoutId;
+        const fetchPromise = fetch(options.url, options);
+        
+        if (options.timeout > 0) {
+          const timeoutPromise = new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+              reject(new Error(`Request timeout after ${options.timeout}ms`));
+            }, options.timeout);
+          });
+          
+          Promise.race([fetchPromise, timeoutPromise])
+            .then(handleResponse)
+            .catch(handleError)
+            .finally(() => clearTimeout(timeoutId));
+        } else {
+          fetchPromise
+            .then(handleResponse)
+            .catch(handleError);
+        }
+  
+        function handleResponse(response) {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            return response.json();
+          } else if (contentType && contentType.includes("text")) {
+            return response.text();
+          } else if (contentType && contentType.includes("xml")) {
+            return response.text().then(str => {
+              const parser = new DOMParser();
+              return parser.parseFromString(str, "text/xml");
+            });
+          } else {
+            return response.blob();
+          }
+        }
+  
+        function handleError(error) {
+          if (options.error) {
+            options.error(error);
+          }
+          reject(error);
+        }
       });
     };
   
@@ -560,6 +705,224 @@
     } else {
       document.addEventListener("DOMContentLoaded", callback);
     }
+  };
+
+  /**
+   * Slides up (hides) the matched elements.
+   * @param {number} duration - The duration of the animation in milliseconds.
+   * @param {function} [callback] - A function to call once the animation is complete.
+   * @returns {GStime} The GStime object for chaining.
+   */
+  GStime.prototype.slideUp = function (duration, callback) {
+    return this.each(function () {
+      const el = this;
+      const currentHeight = el.offsetHeight;
+      
+      // Store the original styles to restore later
+      const originalStyles = {
+        overflow: el.style.overflow,
+        height: el.style.height,
+        paddingTop: el.style.paddingTop,
+        paddingBottom: el.style.paddingBottom,
+        marginTop: el.style.marginTop,
+        marginBottom: el.style.marginBottom
+      };
+
+      // Set initial state
+      el.style.overflow = 'hidden';
+      el.style.height = `${currentHeight}px`;
+      
+      // Start animation in next frame to ensure initial height is applied
+      requestAnimationFrame(() => {
+        el.style.height = '0px';
+        el.style.paddingTop = '0px';
+        el.style.paddingBottom = '0px';
+        el.style.marginTop = '0px';
+        el.style.marginBottom = '0px';
+        el.style.transition = `height ${duration}ms, padding ${duration}ms, margin ${duration}ms`;
+        
+        // Add transitionend listener
+        const onTransitionEnd = function() {
+          // Cleanup
+          el.style.display = 'none';
+          for (let prop in originalStyles) {
+            el.style[prop] = originalStyles[prop];
+          }
+          el.style.transition = '';
+          el.removeEventListener('transitionend', onTransitionEnd);
+          
+          // Execute callback if provided
+          if (typeof callback === 'function') callback.call(el);
+        };
+        
+        el.addEventListener('transitionend', onTransitionEnd, { once: true });
+      });
+    });
+  };
+
+  /**
+   * Slides down (shows) the matched elements.
+   * @param {number} duration - The duration of the animation in milliseconds.
+   * @param {function} [callback] - A function to call once the animation is complete.
+   * @returns {GStime} The GStime object for chaining.
+   */
+  GStime.prototype.slideDown = function (duration, callback) {
+    return this.each(function () {
+      const el = this;
+      
+      // Make sure the element is visible but with zero height
+      el.style.overflow = 'hidden';
+      el.style.display = 'block';
+      el.style.height = '0px';
+      el.style.paddingTop = '0px';
+      el.style.paddingBottom = '0px';
+      el.style.marginTop = '0px';
+      el.style.marginBottom = '0px';
+      
+      // Get natural height
+      const targetHeight = el.scrollHeight;
+      
+      // Start animation
+      requestAnimationFrame(() => {
+        el.style.transition = `height ${duration}ms, padding ${duration}ms, margin ${duration}ms`;
+        el.style.height = `${targetHeight}px`;
+        el.style.paddingTop = '';
+        el.style.paddingBottom = '';
+        el.style.marginTop = '';
+        el.style.marginBottom = '';
+        
+        // Add transitionend listener
+        const onTransitionEnd = function() {
+          // Cleanup
+          el.style.height = '';
+          el.style.overflow = '';
+          el.style.transition = '';
+          el.removeEventListener('transitionend', onTransitionEnd);
+          
+          // Execute callback if provided
+          if (typeof callback === 'function') callback.call(el);
+        };
+        
+        el.addEventListener('transitionend', onTransitionEnd, { once: true });
+      });
+    });
+  };
+
+  /**
+   * Toggles between slideUp and slideDown for the matched elements.
+   * @param {number} duration - The duration of the animation in milliseconds.
+   * @param {function} [callback] - A function to call once the animation is complete.
+   * @returns {GStime} The GStime object for chaining.
+   */
+  GStime.prototype.slideToggle = function (duration, callback) {
+    return this.each(function () {
+      const el = this;
+      const isHidden = window.getComputedStyle(el).display === 'none';
+      
+      if (isHidden) {
+        new GStime(el).slideDown(duration, callback);
+      } else {
+        new GStime(el).slideUp(duration, callback);
+      }
+    });
+  };
+
+  /**
+   * Animates an element's color properties.
+   * @param {Object} properties - An object of CSS color properties and their target values.
+   * @param {number} duration - The duration of the animation in milliseconds.
+   * @param {function} [callback] - A function to call once the animation is complete.
+   * @returns {GStime} The GStime object for chaining.
+   */
+  GStime.prototype.colorAnimate = function (properties, duration, callback) {
+    // Helper function to parse color values
+    function parseColor(color) {
+      if (!color) return [0, 0, 0, 0];
+      
+      // Handle RGB(A) format
+      if (color.startsWith('rgb')) {
+        return color.match(/[\d.]+/g).map(Number);
+      }
+      
+      // Handle hex format
+      if (color.startsWith('#')) {
+        if (color.length === 4) { // #RGB
+          return [
+            parseInt(color[1] + color[1], 16),
+            parseInt(color[2] + color[2], 16),
+            parseInt(color[3] + color[3], 16),
+            1
+          ];
+        }
+        if (color.length === 7) { // #RRGGBB
+          return [
+            parseInt(color.substring(1, 3), 16),
+            parseInt(color.substring(3, 5), 16),
+            parseInt(color.substring(5, 7), 16),
+            1
+          ];
+        }
+        if (color.length === 9) { // #RRGGBBAA
+          return [
+            parseInt(color.substring(1, 3), 16),
+            parseInt(color.substring(3, 5), 16),
+            parseInt(color.substring(5, 7), 16),
+            parseInt(color.substring(7, 9), 16) / 255
+          ];
+        }
+      }
+      
+      // Default for unrecognized formats
+      return [0, 0, 0, 1];
+    }
+    
+    // Helper function to interpolate between colors
+    function interpolateColor(start, end, percent) {
+      return start.map((startValue, i) => {
+        return Math.round(startValue + (end[i] - startValue) * percent);
+      });
+    }
+    
+    const start = performance.now();
+    const initialStyles = {};
+    
+    // Get initial color values
+    this.elements.forEach((el) => {
+      const elStyle = getComputedStyle(el);
+      for (let prop in properties) {
+        if (!initialStyles[prop]) initialStyles[prop] = {};
+        initialStyles[prop][el] = parseColor(elStyle[prop]);
+      }
+    });
+    
+    const animate = (timestamp) => {
+      const progress = timestamp - start;
+      const percent = Math.min(progress / duration, 1);
+      
+      this.elements.forEach((el) => {
+        for (let prop in properties) {
+          const initial = initialStyles[prop][el];
+          const target = parseColor(properties[prop]);
+          const current = interpolateColor(initial, target, percent);
+          
+          // Apply interpolated color
+          if (current.length === 4) {
+            el.style[prop] = `rgba(${current[0]}, ${current[1]}, ${current[2]}, ${current[3]})`;
+          } else {
+            el.style[prop] = `rgb(${current[0]}, ${current[1]}, ${current[2]})`;
+          }
+        }
+      });
+      
+      if (percent < 1) {
+        requestAnimationFrame(animate);
+      } else if (typeof callback === "function") {
+        callback();
+      }
+    };
+    
+    requestAnimationFrame(animate);
+    return this;
   };
 
   // Expose GStime to the global object

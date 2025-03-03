@@ -1,156 +1,330 @@
 # GStime JavaScript Library
 
-## Description
+## Философия библиотеки
 
-GStime is a lightweight, feature-rich, and easy-to-use JavaScript library designed to simplify HTML document traversing, event handling, and manipulation of content. It's perfect for fast web development and ideal for those familiar with jQuery but looking for a smaller library with the most commonly used features.
+GStime.js — это легковесная JavaScript библиотека для манипуляции с DOM, создания анимации и выполнения AJAX запросов. Она разработана как современный облегченный аналог jQuery, сохраняющий знакомый синтаксис и популярные функции, но оптимизированный для современных браузеров.
 
-## Features
+### Основные принципы:
 
-- **DOM Manipulation**: Easily get, set, and manipulate the content of HTML elements.
-- **Event Handling**: Attach event listeners to elements with ease using `.on()` and `.off()` methods.
-- **Lightweight**: Very small in size, perfect for projects where you don't need the full power of larger libraries.
-- **Easy to use**: Straightforward for those familiar with jQuery or vanilla JavaScript.
-- **Chainable Methods**: Perform multiple methods on the same line of code with returned `this` for most methods.
-- **Server-side compatibility**: Checks for the existence of `document` to support usage in server-side environments.
-- **Multiple Element Support**: Most methods operate on and return collections of elements, not just single elements.
+- **Минимальный размер**: Только необходимый функционал, без излишних возможностей
+- **Современный JavaScript**: Использование современного синтаксиса и API браузеров
+- **Совместимость API**: Синтаксис похож на jQuery для облегчения миграции
+- **Цепочки методов**: Поддержка цепных вызовов методов для лаконичного кода
 
-## Chainable Methods
-
-Many methods in GStime return the GStime object, allowing for method chaining. This includes methods like `addClass()`, `removeClass()`, `append()`, `prepend()`, `hide()`, `show()`, and more. For example:
-
-```javascript
-$('.element')
-  .addClass('new-class')
-  .css('color', 'red')
-  .show()
-  .append('<p>New content</p>');
-  ```
-
-## Multiple Element Support
-GStime supports operating on multiple elements at once. When you select elements using $(), it returns a GStime object containing all matched elements. Methods like each(), addClass(), removeClass(), etc., operate on all selected elements.
-
-## How to Use
-
-Include GStime in your project:
+## Быстрый старт
 
 ```html
-<script src="path-to-GStime.js"></script>
+<!-- Подключение библиотеки -->
+<script src="GStime.js"></script>
+
 <script>
-  // DOM Ready
-  GStime.ready(function () {
-    // Click event
-    $(".element").on("click", function () {
-      console.log("Element clicked!");
+  // DOM готов
+  $(document).ready(function() {
+    // Выбор элементов и манипуляция с ними
+    $('button').on('click', function() {
+      $('.box').fadeIn(500);
     });
-
-    // Changing value
-    $(".input").val("New Value");
-
-    // Adding HTML content
-    $(".container").append("<p>New paragraph</p>");
-  });
-
-  GStime.ajax({
-    url: "https://api.example.com/data",
-    method: "GET",
-    success: function (response) {
-      console.log("Data received:", response);
-    },
   });
 </script>
 ```
 
-## Methods Available
+## Основные возможности
 
-### Element Selection and Manipulation
+### Селекторы
 
-- `$(selector)`: Select DOM elements.
-- `val([newVal])`: Get/set the value of elements.
-- `html([content])`: Get/set the HTML content of elements.
-- `append(content)`: Append content to elements.
-- `prepend(content)`: Prepend content to elements.
-- `after(content)`: Insert content after each element.
-- `before(content)`: Insert content before each element.
-- `remove()`: Remove the set of matched elements from the DOM.
+Выбор элементов на странице по CSS-селекторам:
 
-### DOM Traversing
+```javascript
+// Выбор по ID
+$("#myElement");
 
-- `parent()`: Gets the parent of each element.
-- `children()`: Gets the children of each element.
-- `siblings()`: Gets the siblings of each element.
-- `find(selector)`: Finds descendants of each element.
-- `closest(selector)`: Gets the first ancestor that matches the selector.
+// Выбор по классу
+$(".myClass");
 
-### CSS Properties
+// Выбор по тегу
+$("div");
 
-- `css(property, [value])`: Get/set CSS properties.
+// Комбинированные селекторы
+$("ul.menu li");
+```
 
-### Element Visibility
+### Работа с DOM
 
-- `hide()`: Hide elements.
-- `show()`: Show elements.
-- `toggle()`: Toggle visibility of elements.
+Манипуляция с DOM-элементами:
 
-### Manipulating Classes
+```javascript
+// Изменение HTML содержимого
+$("#content").html("<h1>Новый заголовок</h1>");
 
-- `addClass(className)`: Add a class to elements.
-- `removeClass(className)`: Remove a class from elements.
-- `toggleClass(className)`: Toggle a class on elements.
-- `hasClass(className)`: Check if the first element has a class.
+// Добавление содержимого
+$(".container").append("<p>Новый параграф</p>");
 
-### Event Handling
+// Создание элементов
+$("<div class='box'></div>").appendTo(".container");
 
-- `on(event, callback)`: Attach an event handler.
-- `off(event, callback)`: Remove an event handler.
+// Работа с классами
+$(".item").addClass("active");
+$(".item").removeClass("hidden");
+$(".item").toggleClass("selected");
 
-### Dimensions and Position
+// Работа с атрибутами
+$("img").attr("src", "new-image.jpg");
+$("input").val("Новое значение");
+```
 
-- `width([value])`: Get/set the width of elements.
-- `height([value])`: Get/set the height of elements.
-- `offset()`: Get the offset of the first element.
-- `position()`: Get the position of the first element.
+### События
 
-### Attributes
+Обработка событий:
 
-- `attr(name, [value])`: Get/set attributes.
-- `removeAttr(name)`: Remove an attribute.
+```javascript
+// Базовые события
+$("#button").on("click", function() {
+  console.log("Кнопка нажата");
+});
 
-### Effects and Animation
+// Делегирование событий
+$(".container").on("click", ".button", function() {
+  console.log("Нажата кнопка внутри контейнера");
+});
 
-- `animate(properties, duration, [callback])`: Animate CSS properties.
-- `fadeIn(duration, [callback])`: Fade in elements.
-- `fadeOut(duration, [callback])`: Fade out elements.
+// Удаление обработчиков
+$("#element").off("click");
+```
 
-### Utility
+### Анимации
 
-- `clone()`: Create a shallow copy of elements.
-- `each(callback)`: Iterate over elements.
-- `each(obj, callback)`: Iterate over an array or object.
-- `map(obj, callback)`: Translate all items in an array or object.
+Создание анимаций:
 
-### Static Methods
+```javascript
+// Простые анимации
+$(".box").fadeIn(500);
+$(".box").fadeOut(500);
 
-- `GStime.ajax(settings)`: Perform an AJAX request.
-- `GStime.ready(callback)`: Execute code when the DOM is ready.
+// Слайдеры
+$(".panel").slideDown(500);
+$(".panel").slideUp(500);
+$(".panel").slideToggle(500);
 
-### Contribution
+// Пользовательские анимации
+$(".element").animate({ width: "200px", height: "300px" }, 500);
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](#) if you want to contribute.
+// Анимация цвета
+$(".button").colorAnimate({ backgroundColor: "#ff0000" }, 500);
+```
 
-### License
+### AJAX
 
-This project is MIT licensed.
+Выполнение асинхронных запросов:
 
-## Browser and Environment Support
-GStime is designed to work in modern browsers that support ES6 features. It should work in:
+```javascript
+// GET запрос
+GStime.get("api/users", { page: 1 })
+  .then(data => console.log(data))
+  .catch(error => console.error(error));
 
-- Chrome 51+
-- Firefox 54+
-- Safari 10+
+// POST запрос
+GStime.post("api/users", { name: "John", age: 30 })
+  .then(response => console.log(response))
+  .catch(error => console.error(error));
+
+// Расширенные настройки
+GStime.ajax({
+  url: "api/data",
+  method: "POST",
+  data: { id: 123 },
+  headers: { "Authorization": "Bearer token" },
+  timeout: 5000,
+  beforeSend: function() {
+    $(".loader").show();
+  }
+})
+.then(data => console.log(data))
+.catch(error => console.error(error))
+.finally(() => $(".loader").hide());
+```
+
+## API Документация
+
+### Основные методы
+
+#### Селектор `$(selector)`
+
+Создает новый объект GStime с элементами, соответствующими селектору.
+
+**Параметры:**
+- `selector` (String|Element|NodeList|Array): CSS-селектор, HTML-строка или DOM-элемент.
+
+**Ограничения:**
+- При передаче HTML-строки создается только один элемент верхнего уровня.
+
+#### `.each(callback)`
+
+Выполняет функцию для каждого элемента в наборе.
+
+**Параметры:**
+- `callback` (Function): Функция, выполняемая для каждого элемента.
+
+#### `.on(event, [selector], callback)`
+
+Присоединяет обработчик события к элементам.
+
+**Параметры:**
+- `event` (String): Название события (например, "click").
+- `selector` (String, необязательный): Селектор для делегирования событий.
+- `callback` (Function): Функция-обработчик.
+
+**Ограничения:**
+- Делегирование работает только для элементов, существующих на момент привязки события.
+
+#### `.off(event, callback)`
+
+Удаляет обработчик события с элементов.
+
+**Параметры:**
+- `event` (String): Название события.
+- `callback` (Function): Функция, которую нужно удалить.
+
+**Ограничения:**
+- При использовании делегированных событий необходимо передать точно ту же функцию, которая была назначена через `.on()`.
+
+#### `.val([newVal])`
+
+Получает или устанавливает значение элементов формы.
+
+**Параметры:**
+- `newVal` (String, необязательный): Новое значение.
+
+**Возвращает:**
+- Без параметров: значение первого элемента.
+- С параметром: объект GStime для цепочки вызовов.
+
+#### `.html([content])`
+
+Получает или устанавливает HTML содержимое элементов.
+
+**Параметры:**
+- `content` (String, необязательный): HTML содержимое.
+
+**Возвращает:**
+- Без параметров: содержимое первого элемента.
+- С параметром: объект GStime для цепочки вызовов.
+
+#### `.css(prop, [value])` или `.css(properties)`
+
+Получает или устанавливает CSS свойства элементов.
+
+**Параметры:**
+- `prop` (String): Название CSS свойства.
+- `value` (String|Number, необязательный): Значение CSS свойства.
+- `properties` (Object): Объект с CSS свойствами.
+
+**Возвращает:**
+- При получении: значение свойства.
+- При установке: объект GStime для цепочки вызовов.
+
+### Анимации
+
+#### `.animate(properties, duration, [callback])`
+
+Анимирует CSS свойства элементов.
+
+**Параметры:**
+- `properties` (Object): Объект с CSS свойствами и их конечными значениями.
+- `duration` (Number): Длительность анимации в миллисекундах.
+- `callback` (Function, необязательный): Функция, вызываемая по завершении.
+
+**Ограничения:**
+- Анимировать можно только числовые значения CSS свойств.
+
+#### `.fadeIn(duration, [callback])` / `.fadeOut(duration, [callback])`
+
+Показывает или скрывает элементы с эффектом плавного изменения прозрачности.
+
+**Параметры:**
+- `duration` (Number): Длительность анимации в миллисекундах.
+- `callback` (Function, необязательный): Функция, вызываемая по завершении.
+
+#### `.slideUp(duration, [callback])` / `.slideDown(duration, [callback])` / `.slideToggle(duration, [callback])`
+
+Скрывает, показывает или переключает видимость элементов с эффектом сворачивания/разворачивания.
+
+**Параметры:**
+- `duration` (Number): Длительность анимации в миллисекундах.
+- `callback` (Function, необязательный): Функция, вызываемая по завершении.
+
+**Ограничения:**
+- Может работать некорректно для элементов с padding/margin или сложной внутренней структурой.
+
+#### `.colorAnimate(properties, duration, [callback])`
+
+Анимирует цветовые CSS свойства элементов.
+
+**Параметры:**
+- `properties` (Object): Объект с цветовыми CSS свойствами и их конечными значениями.
+- `duration` (Number): Длительность анимации в миллисекундах.
+- `callback` (Function, необязательный): Функция, вызываемая по завершении.
+
+**Ограничения:**
+- Поддерживаются форматы цветов: hex (#RGB, #RRGGBB, #RRGGBBAA), rgb() и rgba().
+
+### AJAX
+
+#### `GStime.ajax(settings)`
+
+Выполняет AJAX запрос.
+
+**Параметры:**
+- `settings` (Object): Объект с настройками запроса:
+  - `url` (String): URL для запроса.
+  - `method` (String): HTTP метод (GET, POST, PUT, DELETE).
+  - `data` (Object|String): Данные для отправки.
+  - `headers` (Object): HTTP заголовки.
+  - `timeout` (Number): Таймаут запроса в миллисекундах.
+  - `beforeSend` (Function): Функция, вызываемая перед отправкой запроса.
+
+**Возвращает:**
+- Promise, разрешающийся с данными ответа или отклоняющийся с ошибкой.
+
+**Ограничения:**
+- Не поддерживает синхронные запросы.
+- Ограниченная поддержка кросс-доменных запросов (зависит от браузера).
+
+#### `GStime.get(url, [data], [options])`
+
+Выполняет GET запрос.
+
+**Параметры:**
+- `url` (String): URL для запроса.
+- `data` (Object, необязательный): Параметры запроса.
+- `options` (Object, необязательный): Дополнительные настройки.
+
+#### `GStime.post(url, data, [options])`
+
+Выполняет POST запрос.
+
+**Параметры:**
+- `url` (String): URL для запроса.
+- `data` (Object): Данные для отправки.
+- `options` (Object, необязательный): Дополнительные настройки.
+
+#### `GStime.put(url, data, [options])` / `GStime.delete(url, [data], [options])`
+
+Выполняет PUT или DELETE запрос.
+
+**Параметры:**
+- `url` (String): URL для запроса.
+- `data` (Object): Данные для отправки.
+- `options` (Object, необязательный): Дополнительные настройки.
+
+## Совместимость с браузерами
+
+GStime.js поддерживает следующие браузеры:
+- Chrome 60+
+- Firefox 55+
+- Safari 11+
 - Edge 15+
-- Opera 38+
+- Opera 47+
 
-For server-side environments, GStime is compatible with Node.js 6.4.0 and later versions.
+## Лицензия
 
-### Note: 
-Some features may require additional polyfills for older browsers. For the best experience and widest compatibility, consider using GStime with a modern browser or environment.
+GStime.js распространяется под лицензией MIT.
