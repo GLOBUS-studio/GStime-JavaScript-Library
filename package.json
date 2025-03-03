@@ -5,7 +5,7 @@
   "main": "GStime.js",
   "scripts": {
     "minify": "uglifyjs GStime.js -c -m -o GStime.min.js",
-    "build": "npm run minify && echo '/* GStime.js v1.0.0 | GLOBUS.studio | MIT License */' > temp.js && cat GStime.min.js >> temp.js && mv temp.js GStime.min.js"
+    "build": "npm run minify && echo '/* GStime.js v1.4.0 | GLOBUS.studio | MIT License */' > temp.js && cat GStime.min.js >> temp.js && mv temp.js GStime.min.js"
   },
   "keywords": [
     "javascript",
