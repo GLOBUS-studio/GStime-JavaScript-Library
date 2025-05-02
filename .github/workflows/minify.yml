@@ -31,3 +31,16 @@ jobs:
       with:
         commit_message: "Build: Minify GStime.js"
         file_pattern: 'GStime.min.js'
+
+    - name: Send success message to Telegram
+      if: success()
+      run: |
+          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+                  -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+                  -d text="🟢 $GITHUB_REPOSITORY [${{ github.event.pusher.name }}] - OK"
+    - name: Send error message to Telegram
+      if: failure()
+      run: |
+          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+          -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          -d text="🔴 $GITHUB_REPOSITORY [${{ github.event.pusher.name }}] - ERROR"   
