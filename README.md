@@ -1,5 +1,36 @@
 # GStime JavaScript Library
 
+> **v2.0.0** ships as UMD (browser global, CommonJS, AMD). See [CHANGELOG.md](CHANGELOG.md) for breaking changes from v1.x.
+
+## Install
+
+```bash
+npm install gstime
+```
+
+Or include from a CDN:
+
+```html
+<script src="https://unpkg.com/gstime/GStime.min.js"></script>
+```
+
+## Import
+
+```js
+// Browser global (after <script>)
+$('selector')
+
+// CommonJS / Node
+const { $, GStime } = require('gstime');
+
+// ESM (via bundler)
+import { $, GStime } from 'gstime';
+```
+
+## Security: XSS warning
+
+`html()`, `append()`, `prepend()`, `before()`, `after()` and constructor HTML strings use `innerHTML`/`insertAdjacentHTML` internally. **Never pass untrusted user input to these methods.** Sanitize first (e.g. with DOMPurify) or use plain text via `.elements[0].textContent = value`.
+
 ## Library Philosophy
 
 GStime.js is a lightweight JavaScript library for DOM manipulation, animation creation, and AJAX requests. It is designed as a modern lightweight alternative to jQuery, maintaining familiar syntax and popular functions, but optimized for modern browsers.

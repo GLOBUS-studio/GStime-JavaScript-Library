@@ -1,4 +1,4 @@
-name: Build and Minify
+name: Build, Test and Minify
 
 on:
   push:
@@ -11,36 +11,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '16'
-        # Удаляем опцию cache, которая вызывает ошибку
-        # cache: 'npm'
+        node-version: '20'
+        cache: 'npm'
 
     - name: Install dependencies
       run: npm install
 
-    - name: Minify GStime.js
+    - name: Run tests
+      run: npm test
+
+    - name: Build minified bundle
       run: npm run build
 
+    - name: Report bundle size
+      run: npm run size
+
     - name: Commit minified file
-      uses: stefanzweifel/git-auto-commit-action@v4
+      if: github.event_name == 'push'
+      uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: "Build: Minify GStime.js"
-        file_pattern: 'GStime.min.js'
+        file_pattern: 'GStime.min.js GStime.min.js.map'
 
     - name: Send success message to Telegram
-      if: success()
+      if: success() && env.TELEGRAM_BOT_TOKEN != ''
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-                  -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                  -d chat_id="${TELEGRAM_CHAT_ID}" \
                   -d text="🟢 $GITHUB_REPOSITORY [${{ github.event.pusher.name }}] - OK"
     - name: Send error message to Telegram
-      if: failure()
+      if: failure() && env.TELEGRAM_BOT_TOKEN != ''
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       run: |
-          curl -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-          -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+          curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          -d chat_id="${TELEGRAM_CHAT_ID}" \
           -d text="🔴 $GITHUB_REPOSITORY [${{ github.event.pusher.name }}] - ERROR"   

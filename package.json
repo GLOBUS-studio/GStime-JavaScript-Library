@@ -1,22 +1,67 @@
 {
   "name": "gstime",
-  "version": "1.4.0",
-  "description": "A lightweight JavaScript library for DOM manipulation",
+  "version": "2.0.0",
+  "description": "A lightweight JavaScript library for DOM manipulation, animation, and AJAX (UMD).",
   "main": "GStime.js",
+  "module": "GStime.js",
+  "browser": "GStime.min.js",
+  "unpkg": "GStime.min.js",
+  "jsdelivr": "GStime.min.js",
+  "types": "GStime.d.ts",
+  "exports": {
+    ".": {
+      "types": "./GStime.d.ts",
+      "browser": "./GStime.min.js",
+      "import": "./GStime.js",
+      "require": "./GStime.js",
+      "default": "./GStime.js"
+    },
+    "./min": "./GStime.min.js"
+  },
+  "sideEffects": false,
+  "files": [
+    "GStime.js",
+    "GStime.min.js",
+    "GStime.min.js.map",
+    "GStime.d.ts",
+    "README.md",
+    "README_ru.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
-    "minify": "uglifyjs GStime.js -c -m -o GStime.min.js",
-    "build": "npm run minify && echo '/* GStime.js v1.4.0 | GLOBUS.studio | MIT License */' > temp.js && cat GStime.min.js >> temp.js && mv temp.js GStime.min.js"
+    "minify": "terser GStime.js -c -m --source-map \"url='GStime.min.js.map'\" -o GStime.min.js",
+    "build": "node scripts/build.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "size": "node -e \"const fs=require('fs');const zlib=require('zlib');const b=fs.readFileSync('GStime.min.js');console.log('min:',b.length,'B; gzip:',zlib.gzipSync(b).length,'B')\""
   },
   "keywords": [
     "javascript",
     "library",
     "dom",
     "manipulation",
-    "ajax"
+    "ajax",
+    "animation",
+    "umd",
+    "lightweight"
   ],
   "author": "GLOBUS.studio",
   "license": "MIT",
+  "homepage": "https://github.com/GLOBUS-studio/GStime-JavaScript-Library#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GLOBUS-studio/GStime-JavaScript-Library.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GLOBUS-studio/GStime-JavaScript-Library/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
-    "uglify-js": "^3.17.4"
+    "terser": "^5.31.0",
+    "vitest": "^1.6.0",
+    "jsdom": "^24.0.0"
   }
 }

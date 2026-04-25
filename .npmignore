@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+examples
+tests
+scripts
+coverage
+*.log
+.vscode
+.editorconfig
+.eslintrc*
+.prettierrc*
+README_*.md

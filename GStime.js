@@ -2,14 +2,42 @@
 * GStime.js
 * A lightweight library for DOM manipulation.
 * GLOBUS.studio
-* Version: 1.4.0
+* Version: 2.0.0
 */
 
-(function (global) {
+(function (root, factory) {
+    "use strict";
+    if (typeof define === "function" && define.amd) {
+      define([], factory);
+    } else if (typeof module === "object" && module.exports) {
+      module.exports = factory();
+    } else {
+      const api = factory();
+      root.GStime = api.GStime;
+      root.$ = api.$;
+    }
+  })(typeof self !== "undefined" ? self : (typeof globalThis !== "undefined" ? globalThis : this), function () {
     "use strict";
 
     const isClient = typeof document !== "undefined";
-  
+    const HTML_RE = /^\s*<([a-z][\w-]*)[\s\S]*>/i;
+    // WeakMap<Element, Map<event, Array<{ user, listener, selector }>>>
+    const listenerStore = isClient ? new WeakMap() : null;
+
+    function getListenerMap(el, event) {
+      let map = listenerStore.get(el);
+      if (!map) {
+        map = new Map();
+        listenerStore.set(el, map);
+      }
+      let arr = map.get(event);
+      if (!arr) {
+        arr = [];
+        map.set(event, arr);
+      }
+      return arr;
+    }
+
     /**
      * GStime Class representing a lightweight library for DOM manipulation.
      * @constructor
@@ -20,30 +48,40 @@
         return new GStime(selector);
       }
       this.elements = [];
-      if (isClient) {
-        if (typeof selector === "string") {
-          if (selector.startsWith("<") && selector.endsWith(">")) {
-            this.elements = [this.createHTML(selector)];
-          } else {
+      if (!isClient || selector == null) return;
+      if (typeof selector === "string") {
+        if (HTML_RE.test(selector)) {
+          this.elements = this.createHTML(selector);
+        } else {
+          try {
             this.elements = Array.from(document.querySelectorAll(selector));
+          } catch (_e) {
+            this.elements = [];
           }
-        } else if (selector instanceof Element) {
-          this.elements = [selector];
-        } else if (selector instanceof NodeList || Array.isArray(selector)) {
-          this.elements = Array.from(selector);
         }
+      } else if (selector instanceof Element) {
+        this.elements = [selector];
+      } else if (typeof Document !== "undefined" && selector instanceof Document) {
+        this.elements = [selector];
+      } else if (typeof Window !== "undefined" && selector instanceof Window) {
+        this.elements = [selector];
+      } else if (selector instanceof NodeList || Array.isArray(selector) || selector instanceof HTMLCollection) {
+        this.elements = Array.from(selector).filter(Boolean);
+      } else if (typeof selector === "function") {
+        // $(fn) -> ready shorthand
+        GStime.ready(selector);
       }
     }
   
     /**
-     * Creates an HTML element from a string.
+     * Creates HTML element(s) from a string. Supports multiple top-level nodes.
      * @param {string} html - The HTML string.
-     * @returns {Element} The created element.
+     * @returns {Element[]} The created elements.
      */
     GStime.prototype.createHTML = function (html) {
-      const div = document.createElement("div");
-      div.innerHTML = html.trim();
-      return div.firstChild;
+      const tpl = document.createElement("template");
+      tpl.innerHTML = String(html).trim();
+      return Array.from(tpl.content.children);
     };
   
     /**
@@ -57,53 +95,69 @@
     };
   
     /**
-     * Attaches an event listener to the elements with optional event delegation.
-     * @param {string} event - The event type to listen for.
-     * @param {string} [selector] - Optional selector for event delegation. If provided, the event will only fire for elements matching this selector.
-     * @param {function} callback - The function to call when the event occurs.
-     * @returns {GStime} The GStime object for chaining.
+     * Attaches an event listener with optional event delegation.
+     * @param {string} event - The event type.
+     * @param {string} [selector] - Optional selector for delegation.
+     * @param {function} callback - The handler.
+     * @returns {GStime} For chaining.
      */
     GStime.prototype.on = function (event, selector, callback) {
-      // Check if second argument is a function (no selector provided)
       if (typeof selector === "function") {
         callback = selector;
         selector = null;
-        
-        // Use the original event binding without delegation
-        return this.each(function () {
-          this.addEventListener(event, callback, false);
-        });
       }
-      
-      // Event delegation
+      if (typeof callback !== "function") return this;
+
       return this.each(function () {
-        this.addEventListener(event, function (e) {
-          const potentialTargets = document.querySelectorAll(selector);
-          let target = e.target;
-          
-          while (target && target !== this) {
-            if (Array.from(potentialTargets).includes(target)) {
-              // Create a new event with original properties
-              const delegatedEvent = Object.create(e);
-              // Add currentTarget property
-              delegatedEvent.currentTarget = target;
-              callback.call(target, delegatedEvent);
+        const el = this;
+        let listener;
+        if (selector) {
+          listener = function (e) {
+            let target = e.target;
+            while (target && target !== el) {
+              if (target.nodeType === 1 && target.matches(selector)) {
+                const proxy = new Proxy(e, {
+                  get(obj, prop) {
+                    if (prop === "currentTarget") return target;
+                    if (prop === "delegateTarget") return el;
+                    const v = obj[prop];
+                    return typeof v === "function" ? v.bind(obj) : v;
+                  }
+                });
+                callback.call(target, proxy);
+                return;
+              }
+              target = target.parentNode;
             }
-            target = target.parentNode;
-          }
-        }, false);
+          };
+        } else {
+          listener = function (e) { callback.call(el, e); };
+        }
+        el.addEventListener(event, listener, false);
+        getListenerMap(el, event).push({ user: callback, listener: listener, selector: selector || null });
       });
     };
-  
+
     /**
-     * Removes an event listener from the elements.
-     * @param {string} event - The event type to remove.
-     * @param {function} callback - The function to remove from the event.
-     * @returns {GStime} The GStime object for chaining.
+     * Removes an event listener previously attached with .on().
+     * @param {string} event - The event type.
+     * @param {function} [callback] - The original handler. If omitted, removes all handlers for the event.
+     * @returns {GStime} For chaining.
      */
     GStime.prototype.off = function (event, callback) {
       return this.each(function () {
-        this.removeEventListener(event, callback, false);
+        const el = this;
+        const map = listenerStore.get(el);
+        if (!map) return;
+        const arr = map.get(event);
+        if (!arr) return;
+        for (let i = arr.length - 1; i >= 0; i--) {
+          if (!callback || arr[i].user === callback) {
+            el.removeEventListener(event, arr[i].listener, false);
+            arr.splice(i, 1);
+          }
+        }
+        if (arr.length === 0) map.delete(event);
       });
     };
   
@@ -212,15 +266,35 @@
       return new GStime(this.elements.map((el) => el.cloneNode(true)));
     };
   
+    // Properties that are unitless
+    const UNITLESS_PROPS = new Set([
+      "opacity", "zIndex", "fontWeight", "lineHeight", "order",
+      "flexGrow", "flexShrink", "zoom"
+    ]);
+
+    function unitFor(prop, value) {
+      if (UNITLESS_PROPS.has(prop)) return "";
+      if (typeof value === "string") {
+        const m = value.match(/[a-z%]+$/i);
+        if (m) return m[0];
+      }
+      return "px";
+    }
+
     /**
      * Animates CSS properties of the elements.
-     * @param {Object} properties - An object of CSS properties and their target values.
-     * @param {number} duration - The duration of the animation in milliseconds.
-     * @param {function} [callback] - A function to call once the animation is complete.
-     * @returns {GStime} The GStime object for chaining.
+     * @param {Object} properties - CSS properties and target values.
+     * @param {number} duration - Duration in milliseconds.
+     * @param {function} [callback] - Called when animation completes.
+     * @returns {GStime} For chaining.
      */
     GStime.prototype.animate = function (properties, duration, callback) {
+      duration = Math.max(0, Number(duration) || 0);
       const start = performance.now();
+      const units = {};
+      for (const prop in properties) {
+        units[prop] = unitFor(prop, properties[prop]);
+      }
       const initialStyles = this.elements.map((el) =>
         Object.fromEntries(
           Object.keys(properties).map((prop) => [
@@ -229,28 +303,38 @@
           ])
         )
       );
-  
-      const animate = (timestamp) => {
+
+      if (duration === 0) {
+        this.elements.forEach((el) => {
+          for (const prop in properties) {
+            el.style[prop] = parseFloat(properties[prop]) + units[prop];
+          }
+        });
+        if (typeof callback === "function") callback();
+        return this;
+      }
+
+      const step = (timestamp) => {
         const progress = timestamp - start;
         const percent = Math.min(progress / duration, 1);
-  
+
         this.elements.forEach((el, index) => {
-          for (let prop in properties) {
+          for (const prop in properties) {
             const initial = initialStyles[index][prop];
             const target = parseFloat(properties[prop]);
             const value = initial + (target - initial) * percent;
-            el.style[prop] = `${value}px`;
+            el.style[prop] = value + units[prop];
           }
         });
-  
+
         if (percent < 1) {
-          requestAnimationFrame(animate);
+          requestAnimationFrame(step);
         } else if (typeof callback === "function") {
           callback();
         }
       };
-  
-      requestAnimationFrame(animate);
+
+      requestAnimationFrame(step);
       return this;
     };
   
@@ -269,14 +353,16 @@
   
     /**
      * Fades in the matched elements.
-     * @param {number} duration - The duration of the animation in milliseconds.
-     * @param {function} [callback] - A function to call once the animation is complete.
-     * @returns {GStime} The GStime object for chaining.
+     * @param {number} duration - Duration in milliseconds.
+     * @param {function} [callback] - Callback on complete.
+     * @returns {GStime} For chaining.
      */
     GStime.prototype.fadeIn = function (duration, callback) {
-      return this.show()
-        .css("opacity", 0)
-        .animate({ opacity: 1 }, duration, callback);
+      this.each(function () {
+        if (getComputedStyle(this).display === "none") this.style.display = "";
+        this.style.opacity = "0";
+      });
+      return this.animate({ opacity: 1 }, duration, callback);
     };
   
     /**
@@ -474,97 +560,92 @@
           reject(new Error("A URL is required for the ajax request"));
           return;
         }
-  
-        const options = {
+
+        const opts = Object.assign({
           method: "GET",
           headers: {},
           timeout: 0,
-          ...settings,
-        };
-  
-        // Call beforeSend if provided and abort if it returns false
-        if (options.beforeSend && options.beforeSend() === false) {
+          credentials: "same-origin",
+          mode: "cors",
+        }, settings);
+
+        if (opts.beforeSend && opts.beforeSend() === false) {
           reject(new Error("Request aborted by beforeSend callback"));
           return;
         }
-  
-        if (options.data) {
-          if (options.method.toUpperCase() === "GET") {
-            options.url += `?${new URLSearchParams(options.data)}`;
-          } else if (typeof options.data === "object") {
-            if (!options.headers["Content-Type"]) {
-              options.headers["Content-Type"] = "application/json";
-              options.body = JSON.stringify(options.data);
-            } else if (
-              options.headers["Content-Type"].includes(
-                "application/x-www-form-urlencoded"
-              )
-            ) {
-              options.body = new URLSearchParams(options.data).toString();
-            } else if (
-              options.headers["Content-Type"].includes("multipart/form-data")
-            ) {
-              const formData = new FormData();
-              for (let key in options.data) {
-                formData.append(key, options.data[key]);
-              }
-              options.body = formData;
-              // Remove the Content-Type header to let browser set it with boundary
-              delete options.headers["Content-Type"];
+
+        let url = opts.url;
+        const fetchInit = {
+          method: String(opts.method).toUpperCase(),
+          headers: Object.assign({}, opts.headers),
+          credentials: opts.credentials,
+          mode: opts.mode,
+        };
+        if (opts.cache) fetchInit.cache = opts.cache;
+        if (opts.redirect) fetchInit.redirect = opts.redirect;
+        if (opts.referrer) fetchInit.referrer = opts.referrer;
+        if (opts.integrity) fetchInit.integrity = opts.integrity;
+
+        if (opts.data != null) {
+          if (fetchInit.method === "GET" || fetchInit.method === "HEAD") {
+            const qs = new URLSearchParams(opts.data).toString();
+            url += (url.indexOf("?") >= 0 ? "&" : "?") + qs;
+          } else if (opts.data instanceof FormData || opts.data instanceof Blob || opts.data instanceof ArrayBuffer || typeof opts.data === "string") {
+            fetchInit.body = opts.data;
+          } else if (typeof opts.data === "object") {
+            const ct = fetchInit.headers["Content-Type"] || fetchInit.headers["content-type"];
+            if (ct && /application\/x-www-form-urlencoded/i.test(ct)) {
+              fetchInit.body = new URLSearchParams(opts.data).toString();
+            } else if (ct && /multipart\/form-data/i.test(ct)) {
+              const fd = new FormData();
+              for (const k in opts.data) fd.append(k, opts.data[k]);
+              fetchInit.body = fd;
+              delete fetchInit.headers["Content-Type"];
+              delete fetchInit.headers["content-type"];
+            } else {
+              if (!ct) fetchInit.headers["Content-Type"] = "application/json";
+              fetchInit.body = JSON.stringify(opts.data);
             }
           } else {
-            options.body = options.data;
+            fetchInit.body = String(opts.data);
           }
-          delete options.data;
         }
-  
-        // Setup timeout if needed
+
         let timeoutId;
-        const fetchPromise = fetch(options.url, options);
-        
-        if (options.timeout > 0) {
-          const timeoutPromise = new Promise((_, reject) => {
-            timeoutId = setTimeout(() => {
-              reject(new Error(`Request timeout after ${options.timeout}ms`));
-            }, options.timeout);
-          });
-          
-          Promise.race([fetchPromise, timeoutPromise])
-            .then(handleResponse)
-            .catch(handleError)
-            .finally(() => clearTimeout(timeoutId));
-        } else {
-          fetchPromise
-            .then(handleResponse)
-            .catch(handleError);
+        const controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        if (controller) fetchInit.signal = controller.signal;
+        if (opts.timeout > 0 && controller) {
+          timeoutId = setTimeout(() => controller.abort(), opts.timeout);
         }
-  
-        function handleResponse(response) {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const contentType = response.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            return response.json();
-          } else if (contentType && contentType.includes("text")) {
-            return response.text();
-          } else if (contentType && contentType.includes("xml")) {
-            return response.text().then(str => {
-              const parser = new DOMParser();
-              return parser.parseFromString(str, "text/xml");
-            });
-          } else {
+
+        fetch(url, fetchInit)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const contentType = response.headers.get("content-type") || "";
+            if (contentType.includes("application/json")) return response.json();
+            if (contentType.includes("xml")) {
+              return response.text().then((str) => new DOMParser().parseFromString(str, "text/xml"));
+            }
+            if (contentType.startsWith("text/") || contentType.includes("javascript")) return response.text();
             return response.blob();
-          }
-        }
-  
-        function handleError(error) {
-          if (options.error) {
-            options.error(error);
-          }
-          reject(error);
-        }
+          })
+          .then((data) => {
+            if (typeof opts.success === "function") opts.success(data);
+            resolve(data);
+          })
+          .catch((error) => {
+            const err = (error && error.name === "AbortError")
+              ? new Error(`Request timeout after ${opts.timeout}ms`)
+              : error;
+            if (typeof opts.error === "function") opts.error(err);
+            reject(err);
+          })
+          .finally(() => {
+            if (timeoutId) clearTimeout(timeoutId);
+            if (typeof opts.complete === "function") opts.complete();
+          });
       });
     };
   
@@ -596,7 +677,7 @@
    */
   GStime.prototype.remove = function () {
     return this.each(function () {
-      this.parentNode.removeChild(this);
+      if (this.parentNode) this.parentNode.removeChild(this);
     });
   };
 
@@ -741,21 +822,23 @@
         el.style.marginBottom = '0px';
         el.style.transition = `height ${duration}ms, padding ${duration}ms, margin ${duration}ms`;
         
-        // Add transitionend listener
-        const onTransitionEnd = function() {
-          // Cleanup
+        let done = false;
+        const finish = function () {
+          if (done) return;
+          done = true;
           el.style.display = 'none';
-          for (let prop in originalStyles) {
-            el.style[prop] = originalStyles[prop];
-          }
+          for (const prop in originalStyles) el.style[prop] = originalStyles[prop];
           el.style.transition = '';
           el.removeEventListener('transitionend', onTransitionEnd);
-          
-          // Execute callback if provided
           if (typeof callback === 'function') callback.call(el);
         };
-        
-        el.addEventListener('transitionend', onTransitionEnd, { once: true });
+        const onTransitionEnd = function (e) {
+          if (e.target !== el || e.propertyName !== 'height') return;
+          finish();
+        };
+        el.addEventListener('transitionend', onTransitionEnd);
+        // Fallback if transitionend never fires (reduced motion, hidden tab, etc.)
+        setTimeout(finish, duration + 50);
       });
     });
   };
@@ -769,10 +852,11 @@
   GStime.prototype.slideDown = function (duration, callback) {
     return this.each(function () {
       const el = this;
+      const prevDisplay = el.style.display;
       
       // Make sure the element is visible but with zero height
       el.style.overflow = 'hidden';
-      el.style.display = 'block';
+      if (getComputedStyle(el).display === 'none') el.style.display = 'block';
       el.style.height = '0px';
       el.style.paddingTop = '0px';
       el.style.paddingBottom = '0px';
@@ -791,19 +875,23 @@
         el.style.marginTop = '';
         el.style.marginBottom = '';
         
-        // Add transitionend listener
-        const onTransitionEnd = function() {
-          // Cleanup
+        let done = false;
+        const finish = function () {
+          if (done) return;
+          done = true;
           el.style.height = '';
           el.style.overflow = '';
           el.style.transition = '';
+          if (prevDisplay) el.style.display = prevDisplay;
           el.removeEventListener('transitionend', onTransitionEnd);
-          
-          // Execute callback if provided
           if (typeof callback === 'function') callback.call(el);
         };
-        
-        el.addEventListener('transitionend', onTransitionEnd, { once: true });
+        const onTransitionEnd = function (e) {
+          if (e.target !== el || e.propertyName !== 'height') return;
+          finish();
+        };
+        el.addEventListener('transitionend', onTransitionEnd);
+        setTimeout(finish, duration + 50);
       });
     });
   };
@@ -835,23 +923,34 @@
    * @returns {GStime} The GStime object for chaining.
    */
   GStime.prototype.colorAnimate = function (properties, duration, callback) {
+    duration = Math.max(0, Number(duration) || 0);
     // Helper function to parse color values
     function parseColor(color) {
-      if (!color) return [0, 0, 0, 0];
-      
-      // Handle RGB(A) format
-      if (color.startsWith('rgb')) {
-        return color.match(/[\d.]+/g).map(Number);
+      if (!color || color === "transparent") return [0, 0, 0, 0];
+
+      if (typeof color === "string" && color.startsWith('rgb')) {
+        const nums = color.match(/[\d.]+/g);
+        if (!nums) return [0, 0, 0, 1];
+        const out = nums.map(Number);
+        if (out.length === 3) out.push(1);
+        return out;
       }
-      
-      // Handle hex format
-      if (color.startsWith('#')) {
+
+      if (typeof color === "string" && color.startsWith('#')) {
         if (color.length === 4) { // #RGB
           return [
             parseInt(color[1] + color[1], 16),
             parseInt(color[2] + color[2], 16),
             parseInt(color[3] + color[3], 16),
             1
+          ];
+        }
+        if (color.length === 5) { // #RGBA
+          return [
+            parseInt(color[1] + color[1], 16),
+            parseInt(color[2] + color[2], 16),
+            parseInt(color[3] + color[3], 16),
+            parseInt(color[4] + color[4], 16) / 255
           ];
         }
         if (color.length === 7) { // #RRGGBB
@@ -871,63 +970,93 @@
           ];
         }
       }
-      
-      // Default for unrecognized formats
-      return [0, 0, 0, 1];
-    }
-    
-    // Helper function to interpolate between colors
-    function interpolateColor(start, end, percent) {
-      return start.map((startValue, i) => {
-        return Math.round(startValue + (end[i] - startValue) * percent);
-      });
-    }
-    
-    const start = performance.now();
-    const initialStyles = {};
-    
-    // Get initial color values
-    this.elements.forEach((el) => {
-      const elStyle = getComputedStyle(el);
-      for (let prop in properties) {
-        if (!initialStyles[prop]) initialStyles[prop] = {};
-        initialStyles[prop][el] = parseColor(elStyle[prop]);
-      }
-    });
-    
-    const animate = (timestamp) => {
-      const progress = timestamp - start;
-      const percent = Math.min(progress / duration, 1);
-      
-      this.elements.forEach((el) => {
-        for (let prop in properties) {
-          const initial = initialStyles[prop][el];
-          const target = parseColor(properties[prop]);
-          const current = interpolateColor(initial, target, percent);
-          
-          // Apply interpolated color
-          if (current.length === 4) {
-            el.style[prop] = `rgba(${current[0]}, ${current[1]}, ${current[2]}, ${current[3]})`;
-          } else {
-            el.style[prop] = `rgb(${current[0]}, ${current[1]}, ${current[2]})`;
+
+      // Resolve named colors via the browser by painting into a temp element
+      if (typeof document !== "undefined" && typeof color === "string") {
+        const probe = document.createElement("div");
+        probe.style.color = color;
+        probe.style.display = "none";
+        document.body.appendChild(probe);
+        const computed = getComputedStyle(probe).color;
+        document.body.removeChild(probe);
+        if (computed && computed.startsWith("rgb")) {
+          const nums = computed.match(/[\d.]+/g);
+          if (nums) {
+            const out = nums.map(Number);
+            if (out.length === 3) out.push(1);
+            return out;
           }
         }
+      }
+      return [0, 0, 0, 1];
+    }
+
+    function interpolateColor(start, end, percent) {
+      return start.map((startValue, i) => {
+        const endValue = end[i] != null ? end[i] : startValue;
+        const v = startValue + (endValue - startValue) * percent;
+        return i === 3 ? v : Math.round(v);
       });
-      
+    }
+
+    const start = performance.now();
+    // Map<prop, WeakMap<Element, [r,g,b,a]>>
+    const initialStyles = {};
+
+    this.elements.forEach((el) => {
+      const elStyle = getComputedStyle(el);
+      for (const prop in properties) {
+        if (!initialStyles[prop]) initialStyles[prop] = new WeakMap();
+        initialStyles[prop].set(el, parseColor(elStyle[prop]));
+      }
+    });
+
+    const targets = {};
+    for (const prop in properties) targets[prop] = parseColor(properties[prop]);
+
+    const step = (timestamp) => {
+      const progress = timestamp - start;
+      const percent = duration === 0 ? 1 : Math.min(progress / duration, 1);
+
+      this.elements.forEach((el) => {
+        for (const prop in properties) {
+          const initial = initialStyles[prop].get(el);
+          const current = interpolateColor(initial, targets[prop], percent);
+          el.style[prop] = `rgba(${current[0]}, ${current[1]}, ${current[2]}, ${current[3]})`;
+        }
+      });
+
       if (percent < 1) {
-        requestAnimationFrame(animate);
+        requestAnimationFrame(step);
       } else if (typeof callback === "function") {
         callback();
       }
     };
-    
-    requestAnimationFrame(animate);
+
+    requestAnimationFrame(step);
     return this;
   };
 
-  // Expose GStime to the global object
-  global.GStime = GStime;
-  global.$ = function (selector) {
-    return new GStime(selector);
+  // noConflict shim: restore previous $ if any
+  let _previous$;
+  GStime.noConflict = function () {
+    if (typeof window !== "undefined" && window.$ === apiWrapper) {
+      window.$ = _previous$;
+    }
+    return apiWrapper;
   };
-})(typeof window !== "undefined" ? window : this);
+
+  function apiWrapper(selector) {
+    return new GStime(selector);
+  }
+  // Allow `$.fn` like jQuery for plugin extension
+  apiWrapper.fn = GStime.prototype;
+  // Expose statics on the wrapper
+  Object.keys(GStime).forEach((k) => { apiWrapper[k] = GStime[k]; });
+
+  if (typeof window !== "undefined") {
+    _previous$ = window.$;
+  }
+
+  return { GStime: GStime, $: apiWrapper };
+});
