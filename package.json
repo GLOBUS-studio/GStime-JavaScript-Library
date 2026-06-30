@@ -1,5 +1,5 @@
 {
-  "name": "gstime",
+  "name": "@globus.studio/gstime",
   "version": "2.0.0",
   "description": "A lightweight JavaScript library for DOM manipulation, animation, and AJAX (UMD).",
   "main": "GStime.js",
@@ -48,7 +48,7 @@
   ],
   "author": "GLOBUS.studio",
   "license": "MIT",
-  "homepage": "https://github.com/GLOBUS-studio/GStime-JavaScript-Library#readme",
+  "homepage": "https://www.npmjs.com/package/@globus.studio/gstime",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/GLOBUS-studio/GStime-JavaScript-Library.git"

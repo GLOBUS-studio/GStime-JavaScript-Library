@@ -2,20 +2,20 @@
 
 [![CI](https://github.com/GLOBUS-studio/GStime-JavaScript-Library/actions/workflows/minify.yml/badge.svg)](https://github.com/GLOBUS-studio/GStime-JavaScript-Library/actions/workflows/minify.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![npm](https://img.shields.io/badge/npm-gstime-red.svg)](https://www.npmjs.com/package/gstime)
+[![npm](https://img.shields.io/badge/npm-@globus.studio/gstime-red.svg)](https://www.npmjs.com/package/@globus.studio/gstime)
 
 > **v2.0.0** ships as UMD (browser global, CommonJS, AMD). See [CHANGELOG.md](CHANGELOG.md) for breaking changes from v1.x.
 
 ## Install
 
 ```bash
-npm install gstime
+npm install @globus.studio/gstime
 ```
 
 Or include from a CDN:
 
 ```html
-<script src="https://unpkg.com/gstime/GStime.min.js"></script>
+<script src="https://unpkg.com/@globus.studio/gstime/GStime.min.js"></script>
 ```
 
 ## Import
@@ -25,10 +25,10 @@ Or include from a CDN:
 $('selector')
 
 // CommonJS / Node
-const { $, GStime } = require('gstime');
+const { $, GStime } = require('@globus.studio/gstime');
 
 // ESM (via bundler)
-import { $, GStime } from 'gstime';
+import { $, GStime } from '@globus.studio/gstime';
 ```
 
 ## Security: XSS warning

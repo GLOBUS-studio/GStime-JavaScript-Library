@@ -5,13 +5,13 @@
 ## Установка
 
 ```bash
-npm install gstime
+npm install @globus.studio/gstime
 ```
 
 Или подключение через CDN:
 
 ```html
-<script src="https://unpkg.com/gstime/GStime.min.js"></script>
+<script src="https://unpkg.com/@globus.studio/gstime/GStime.min.js"></script>
 ```
 
 ## Импорт
@@ -21,10 +21,10 @@ npm install gstime
 $('selector')
 
 // CommonJS / Node
-const { $, GStime } = require('gstime');
+const { $, GStime } = require('@globus.studio/gstime');
 
 // ESM (через сборщик)
-import { $, GStime } from 'gstime';
+import { $, GStime } from '@globus.studio/gstime';
 ```
 
 ## Безопасность: предупреждение об XSS
