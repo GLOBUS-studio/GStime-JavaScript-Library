@@ -50,7 +50,7 @@ GStime.js - это легковесная JavaScript библиотека для
 
 <script>
   // DOM готов
-  $(document).ready(function() {
+  $(function() {
     // Выбор элементов и манипуляция с ними
     $('button').on('click', function() {
       $('.box').fadeIn(500);

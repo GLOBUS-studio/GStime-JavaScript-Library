@@ -1,6 +1,6 @@
 {
   "name": "@globus.studio/gstime",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A lightweight JavaScript library for DOM manipulation, animation, and AJAX (UMD).",
   "main": "GStime.js",
   "module": "GStime.js",
@@ -60,8 +60,9 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^1.6.0",
+    "jsdom": "^24.0.0",
     "terser": "^5.31.0",
-    "vitest": "^1.6.0",
-    "jsdom": "^24.0.0"
+    "vitest": "^1.6.0"
   }
 }

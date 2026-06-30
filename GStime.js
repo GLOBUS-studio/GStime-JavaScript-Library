@@ -23,6 +23,8 @@
     const HTML_RE = /^\s*<([a-z][\w-]*)[\s\S]*>/i;
     // WeakMap<Element, Map<event, Array<{ user, listener, selector }>>>
     const listenerStore = isClient ? new WeakMap() : null;
+    // WeakMap<Element, string> — stores original display value before hide()
+    const displayStore = isClient ? new WeakMap() : null;
 
     function getListenerMap(el, event) {
       let map = listenerStore.get(el);
@@ -237,24 +239,42 @@
      * @returns {GStime} The GStime object for chaining.
      */
     GStime.prototype.hide = function () {
-      return this.css("display", "none");
+      return this.each(function () {
+        if (this.nodeType === 1) {
+          const current = this.style.display;
+          if (current !== "none") {
+            displayStore.set(this, current);
+          }
+          this.style.display = "none";
+        }
+      });
     };
-  
+
     /**
      * Displays the matched elements.
      * @returns {GStime} The GStime object for chaining.
      */
     GStime.prototype.show = function () {
-      return this.css("display", "");
+      return this.each(function () {
+        if (this.nodeType === 1) {
+          const prev = displayStore.get(this);
+          this.style.display = prev || "";
+          displayStore.delete(this);
+        }
+      });
     };
-  
+
     /**
      * Toggles the visibility of the matched elements.
      * @returns {GStime} The GStime object for chaining.
      */
     GStime.prototype.toggle = function () {
       return this.each(function () {
-        this.style.display = this.style.display === "none" ? "" : "none";
+        if (getComputedStyle(this).display === "none") {
+          new GStime(this).show();
+        } else {
+          new GStime(this).hide();
+        }
       });
     };
   
@@ -703,12 +723,14 @@
    * Gets the siblings of each element in the set of matched elements.
    * @returns {GStime} A new GStime object containing the sibling elements.
    */
-  GStime.prototype.siblings = function () {
-    const siblings = this.elements.flatMap((el) =>
-      Array.from(el.parentNode.children).filter((child) => child !== el)
-    );
-    return new GStime(siblings);
-  };
+    GStime.prototype.siblings = function () {
+      const siblings = this.elements.flatMap((el) =>
+        el.parentNode
+          ? Array.from(el.parentNode.children).filter((child) => child !== el)
+          : []
+      );
+      return new GStime(siblings);
+    };
 
   /**
    * Finds descendants of each element in the current set of matched elements.
@@ -849,52 +871,64 @@
    * @param {function} [callback] - A function to call once the animation is complete.
    * @returns {GStime} The GStime object for chaining.
    */
-  GStime.prototype.slideDown = function (duration, callback) {
-    return this.each(function () {
-      const el = this;
-      const prevDisplay = el.style.display;
-      
-      // Make sure the element is visible but with zero height
-      el.style.overflow = 'hidden';
-      if (getComputedStyle(el).display === 'none') el.style.display = 'block';
-      el.style.height = '0px';
-      el.style.paddingTop = '0px';
-      el.style.paddingBottom = '0px';
-      el.style.marginTop = '0px';
-      el.style.marginBottom = '0px';
-      
-      // Get natural height
-      const targetHeight = el.scrollHeight;
-      
-      // Start animation
-      requestAnimationFrame(() => {
-        el.style.transition = `height ${duration}ms, padding ${duration}ms, margin ${duration}ms`;
-        el.style.height = `${targetHeight}px`;
-        el.style.paddingTop = '';
-        el.style.paddingBottom = '';
-        el.style.marginTop = '';
-        el.style.marginBottom = '';
+    GStime.prototype.slideDown = function (duration, callback) {
+      return this.each(function () {
+        const el = this;
+        const wasHidden = getComputedStyle(el).display === 'none';
         
-        let done = false;
-        const finish = function () {
-          if (done) return;
-          done = true;
-          el.style.height = '';
-          el.style.overflow = '';
-          el.style.transition = '';
-          if (prevDisplay) el.style.display = prevDisplay;
-          el.removeEventListener('transitionend', onTransitionEnd);
-          if (typeof callback === 'function') callback.call(el);
-        };
-        const onTransitionEnd = function (e) {
-          if (e.target !== el || e.propertyName !== 'height') return;
-          finish();
-        };
-        el.addEventListener('transitionend', onTransitionEnd);
-        setTimeout(finish, duration + 50);
+        // Store original inline display; if it is "none" we should not restore it
+        const prevDisplay = el.style.display && el.style.display !== 'none'
+          ? el.style.display
+          : '';
+        
+        el.style.overflow = 'hidden';
+        if (wasHidden) {
+          el.style.display = '';
+        }
+        // If still hidden after clearing inline style, force block
+        if (getComputedStyle(el).display === 'none') {
+          el.style.display = 'block';
+        }
+        el.style.height = '0px';
+        el.style.paddingTop = '0px';
+        el.style.paddingBottom = '0px';
+        el.style.marginTop = '0px';
+        el.style.marginBottom = '0px';
+        
+        // Get natural height
+        const targetHeight = el.scrollHeight;
+        
+        // Start animation
+        requestAnimationFrame(() => {
+          el.style.transition = `height ${duration}ms, padding ${duration}ms, margin ${duration}ms`;
+          el.style.height = `${targetHeight}px`;
+          el.style.paddingTop = '';
+          el.style.paddingBottom = '';
+          el.style.marginTop = '';
+          el.style.marginBottom = '';
+          
+          let done = false;
+          const finish = function () {
+            if (done) return;
+            done = true;
+            el.style.height = '';
+            el.style.overflow = '';
+            el.style.transition = '';
+            if (wasHidden && prevDisplay) {
+              el.style.display = prevDisplay;
+            }
+            el.removeEventListener('transitionend', onTransitionEnd);
+            if (typeof callback === 'function') callback.call(el);
+          };
+          const onTransitionEnd = function (e) {
+            if (e.target !== el || e.propertyName !== 'height') return;
+            finish();
+          };
+          el.addEventListener('transitionend', onTransitionEnd);
+          setTimeout(finish, duration + 50);
+        });
       });
-    });
-  };
+    };
 
   /**
    * Toggles between slideUp and slideDown for the matched elements.

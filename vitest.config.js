@@ -5,5 +5,8 @@ export default defineConfig({
     environment: "jsdom",
     globals: false,
     include: ["tests/**/*.test.js"],
+    coverage: {
+      include: ["GStime.js"],
+    },
   },
 });

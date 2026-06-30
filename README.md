@@ -54,12 +54,12 @@ GStime.js is a lightweight JavaScript library for DOM manipulation, animation cr
 
 <script>
   // DOM ready
-  $(document).ready(function() {
-    // Select elements and manipulate them
-    $('button').on('click', function() {
-      $('.box').fadeIn(500);
-    });
+$(function() {
+  // Select elements and manipulate them
+  $('button').on('click', function() {
+    $('.box').fadeIn(500);
   });
+});
 </script>
 ```
 
@@ -189,9 +189,6 @@ Creates a new GStime object with elements matching the selector.
 **Parameters:**
 - `selector` (String|Element|NodeList|Array): CSS selector, HTML string, or DOM element.
 
-**Limitations:**
-- When passing an HTML string, only one top-level element is created.
-
 #### `.each(callback)`
 
 Executes a function for each element in the set.
@@ -208,19 +205,13 @@ Attaches an event handler to elements.
 - `selector` (String, optional): Selector for event delegation.
 - `callback` (Function): Event handler function.
 
-**Limitations:**
-- Delegation only works for elements that exist at the time the event is bound.
-
 #### `.off(event, callback)`
 
 Removes an event handler from elements.
 
 **Parameters:**
 - `event` (String): Name of the event.
-- `callback` (Function): Function to remove.
-
-**Limitations:**
-- When using delegated events, you must pass exactly the same function that was assigned via `.on()`.
+- `callback` (Function): Function to remove. If omitted, removes all handlers for the event.
 
 #### `.val([newVal])`
 

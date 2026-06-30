@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.1]
+
+### Fixed
+- `siblings()` no longer throws on detached elements (null parentNode).
+- `slideDown()` no longer forces `display: block`; restores original non-`none` inline display after animation.
+- `show()` now restores the original inline display value that was set before `hide()`, using an internal `WeakMap`.
+- `toggle()` now checks `getComputedStyle` instead of only inline `style.display`, correctly handling CSS-hidden elements.
+- README: fixed outdated/incorrect statements (`$(document).ready`, delegation limitations, single-root HTML).
+- Test suite expanded from 24 to 109 tests (98.9% statement coverage, 100% function coverage).
+
 ## [2.0.0]
 
 ### Breaking
